@@ -1,0 +1,33 @@
+import {
+  Wand2,
+  Image as ImageIcon,
+  Video,
+  FileText,
+  Mic,
+  Copy,
+  Check,
+  Sparkles,
+  History,
+  Trash2,
+  ChevronRight,
+  Settings2,
+  Loader2,
+  X,
+} from 'lucide-react';
+
+export const Icons = {
+  Magic: Wand2,
+  Image: ImageIcon,
+  Video: Video,
+  Text: FileText,
+  Audio: Mic,
+  Copy: Copy,
+  Check: Check,
+  Sparkles: Sparkles,
+  History: History,
+  Delete: Trash2,
+  ArrowRight: ChevronRight,
+  Settings: Settings2,
+  Loading: Loader2,
+  X: X,
+};
