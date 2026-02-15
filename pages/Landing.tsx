@@ -9,9 +9,6 @@ export const Landing: React.FC = () => {
       <header className="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-              <Icons.Magic className="w-4 h-4 text-zinc-300" />
-            </div>
             <span className="font-semibold text-zinc-100">PromptCraft AI</span>
           </div>
           <div className="flex items-center gap-2">
@@ -66,16 +63,28 @@ export const Landing: React.FC = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-full max-w-2xl"
+            className="w-full max-w-2xl text-center"
           >
-            <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 text-left">
-              <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Example</p>
-              <p className="text-zinc-400 text-sm mb-2">
-                <span className="text-zinc-500">Input:</span> &ldquo;A cat in a city&rdquo;
-              </p>
-              <p className="text-zinc-300 text-sm leading-relaxed">
-                <span className="text-zinc-500">Output:</span> Photorealistic tabby cat, neon-lit cyberpunk alley, rain-slicked pavement, bokeh lights, 35mm, cinematic — style raw — v 6
-              </p>
+            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Connect with me</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href="https://instagram.com/aaspandiyar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all"
+              >
+                <Icons.Instagram className="w-4 h-4" />
+                @aaspandiyar
+              </a>
+              <a
+                href="https://tiktok.com/@.4span"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-100 font-medium hover:bg-zinc-700 hover:border-zinc-600 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all"
+              >
+                <Icons.TikTok className="w-4 h-4" />
+                @.4span
+              </a>
             </div>
           </motion.div>
         </div>

@@ -13,6 +13,8 @@ import {
   Settings2,
   Loader2,
   X,
+  Instagram,
+  Music,
 } from 'lucide-react';
 
 export const Icons = {
@@ -30,4 +32,6 @@ export const Icons = {
   Settings: Settings2,
   Loading: Loader2,
   X: X,
+  Instagram: Instagram,
+  TikTok: Music,
 };
