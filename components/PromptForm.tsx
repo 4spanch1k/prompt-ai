@@ -48,7 +48,7 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800 rounded-2xl p-6 space-y-6"
+      className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-6"
     >
       <div className="grid grid-cols-3 gap-2">
         {modelOptions.map((opt) => (
@@ -56,11 +56,11 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
             key={opt.type}
             type="button"
             onClick={() => setTargetModel(opt.type)}
-            className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white ${
-              targetModel === opt.type
-                ? 'bg-zinc-800 border-zinc-600 text-zinc-100 shadow-[0_0_20px_rgba(255,255,255,0.06)]'
-                : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
-            }`}
+            style={targetModel === opt.type ? { backgroundColor: '#ffffff', color: '#000000' } : { backgroundColor: '#27272a' }}
+            className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white ${targetModel === opt.type
+              ? 'border-white text-zinc-900 shadow-md'
+              : 'border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300'
+              }`}
           >
             <opt.icon className="w-5 h-5 mb-1.5" />
             <span className="text-xs font-medium">{opt.label}</span>
@@ -117,11 +117,11 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
                 key={l}
                 type="button"
                 onClick={() => setComplexity(l)}
-                className={`flex-1 py-1.5 text-xs font-medium rounded-md capitalize transition-colors focus:outline-none focus:ring-1 focus:ring-white ${
-                  complexity === l
-                    ? 'bg-zinc-100 text-zinc-900'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
+                style={complexity === l ? { backgroundColor: '#ffffff', color: '#000000' } : {}}
+                className={`flex-1 py-1.5 text-xs font-medium rounded-md capitalize transition-colors focus:outline-none focus:ring-1 focus:ring-white ${complexity === l
+                  ? 'text-zinc-900'
+                  : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
               >
                 {l}
               </button>

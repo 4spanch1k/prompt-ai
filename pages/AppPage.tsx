@@ -8,6 +8,7 @@ import PromptForm from '../components/PromptForm';
 import ResultCard from '../components/ResultCard';
 import HistorySidebar from '../components/HistorySidebar';
 import { Icons } from '../components/Icons';
+import { PromptOptimizer } from '../components/PromptOptimizer';
 import { ResultSkeleton } from '../components/Skeleton';
 import { toast } from 'sonner';
 
@@ -112,7 +113,7 @@ export const AppPage: React.FC = () => {
             <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center">
               <Icons.Magic className="w-4 h-4 text-zinc-300" />
             </div>
-            <span className="font-semibold text-zinc-100">PromptCraft AI</span>
+            <span className="font-semibold text-gradient-animate">PromptCraft AI</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link
@@ -140,6 +141,10 @@ export const AppPage: React.FC = () => {
               Describe your idea; we&apos;ll turn it into a detailed prompt for Midjourney, Runway, ChatGPT, and more.
             </p>
           </div>
+
+          <section>
+            <PromptOptimizer />
+          </section>
 
           <section>
             <PromptForm onSubmit={handleGenerate} isLoading={isLoading} />

@@ -72,7 +72,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, type }) => {
               onCopy={() => copyToClipboard(result.optimizedPrompt)}
             />
           </div>
-          <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap font-sans focus-within:ring-1 focus-within:ring-white">
+          <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 sm:p-4 text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap font-sans focus-within:ring-1 focus-within:ring-white overflow-x-auto">
             {result.optimizedPrompt}
           </pre>
         </div>
@@ -88,7 +88,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, type }) => {
                 onCopy={() => copyToClipboard(result.negativePrompt!, true)}
               />
             </div>
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
+            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 sm:p-3">
               <p className="text-zinc-400 text-sm leading-relaxed">{result.negativePrompt}</p>
             </div>
           </div>
