@@ -113,27 +113,13 @@ export async function enhancePrompt(userPrompt: string): Promise<GroqResponse> {
 
 /**
  * Builds a dynamic system prompt based on the user's chosen
- * style, mood, aspect ratio, and detail level.
+ * style, mood, aspect ratio, detail level, target AI model, and mode.
  */
 function buildStructuredSystem(options: PromptOptions): string {
-    const style = options.style || 'General';
     const mood = options.mood || 'Neutral';
     const ratio = options.aspectRatio || '1:1';
     const detail = options.complexity || 'detailed';
-
-    let styleRules = '';
-
-    if (style.toLowerCase().includes('anime')) {
-        styleRules = `- The style is Anime. Use specific terms: "Niji style", "Studio Ghibli style", "cel-shaded", "vibrant anime aesthetics". Reference Japanese animation techniques.`;
-    } else if (style.toLowerCase().includes('photorealistic') || style.toLowerCase().includes('photo')) {
-        styleRules = `- The style is Photorealistic. Add camera parameters: "8k resolution", "raw photo", "f/2.8 aperture", "85mm lens", "shallow depth of field", "DSLR quality". Reference real-world photography techniques.`;
-    } else if (style.toLowerCase().includes('cyberpunk')) {
-        styleRules = `- The style is Cyberpunk. Use terms: "neon-lit", "dystopian cityscape", "holographic", "rain-soaked streets", "synthwave palette", "augmented reality overlays".`;
-    } else if (style.toLowerCase().includes('oil painting')) {
-        styleRules = `- The style is Oil Painting. Use terms: "impasto brushstrokes", "rich pigments", "canvas texture", "Renaissance chiaroscuro", "classical composition".`;
-    } else {
-        styleRules = `- Apply "${style}" visual style throughout the prompt, using terminology specific to that aesthetic.`;
-    }
+    const mode = options.mode || 'image';
 
     const detailRule =
         detail === 'concise'
@@ -142,8 +128,130 @@ function buildStructuredSystem(options: PromptOptions): string {
                 ? 'moderate detail (2-3 sentences)'
                 : 'provide rich, comprehensive detail (3-5 sentences)';
 
-    return `You are a world-class Prompt Engineer specializing in Generative AI.
+    // ════════════════════════════════
+    //  VIDEO MODE
+    // ════════════════════════════════
+    if (mode === 'video') {
+        const camera = options.camera || 'Static';
+        const aiModel = options.aiModel || 'Runway Gen-3';
+
+        let cameraRules = '';
+        switch (camera) {
+            case 'Static': cameraRules = 'Camera is locked/static — no movement, stable tripod shot.'; break;
+            case 'Zoom In': cameraRules = 'Slow zoom in toward the subject, building dramatic tension.'; break;
+            case 'Zoom Out': cameraRules = 'Slow zoom out revealing the full scene and environment.'; break;
+            case 'Pan Left': cameraRules = 'Smooth horizontal pan from right to left across the scene.'; break;
+            case 'Pan Right': cameraRules = 'Smooth horizontal pan from left to right across the scene.'; break;
+            case 'Truck Left': cameraRules = 'Camera physically moves left on a dolly/track, keeping subject in frame — lateral tracking shot.'; break;
+            case 'Truck Right': cameraRules = 'Camera physically moves right on a dolly/track, keeping subject in frame — lateral tracking shot.'; break;
+            case 'Tilt Up': cameraRules = 'Vertical tilt from ground level upward toward the sky.'; break;
+            case 'Tilt Down': cameraRules = 'Vertical tilt from sky downward to ground level.'; break;
+            case 'Orbit': cameraRules = 'Camera orbits 360° around the subject, revealing all angles — cinematic arc shot.'; break;
+            case 'Handheld': cameraRules = 'Handheld camera with natural micro-shake — raw, immersive, documentary feel.'; break;
+            default: cameraRules = `Camera movement: ${camera}.`; break;
+        }
+
+        return `You are a world-class Video Prompt Engineer specializing in AI video generation (${aiModel}).
+The user wants to generate a video clip with these parameters:
+- Target AI: ${aiModel}
+- Camera Movement: ${camera}
+- Mood: ${mood}
+- Detail Level: ${detail}
+
+Rules:
+- Use CINEMATOGRAPHY terminology: describe shots, movement, pacing, lighting.
+- Structure: [Subject + Action] + [Camera Movement] + [Lighting/Mood] + [Speed/Physics]
+- Camera instruction: ${cameraRules}
+- Set the mood to "${mood}" — incorporate atmosphere, lighting, and emotional tone.
+- Detail level is "${detail}": ${detailRule}.
+- Describe motion, physics, and temporal flow (slow-motion, time-lapse, real-time).
+- Do NOT use image-only parameters like --ar, --v, --niji.
+- Write a vivid cinematic scene description.
+
+CRITICAL: You MUST output the response in this EXACT format:
+[Positive Prompt] ||| [Negative Prompt]
+
+The Positive Prompt describes the full video scene with camera movement and action.
+The Negative Prompt lists things to avoid: static image, freeze frame, blurry, jittery, low fps, watermark, text overlay, distortion, morphing artifacts.
+
+Do NOT add any intro text, explanations, headings, or quotes. Just the two prompts separated by |||.`;
+    }
+
+    // ════════════════════════════════
+    //  IMAGE MODE (existing logic)
+    // ════════════════════════════════
+    const style = options.style || 'General';
+    const aiModel = options.aiModel || 'Midjourney';
+
+    let styleRules = '';
+
+    if (style.toLowerCase().includes('anime')) {
+        styleRules = `- The style is Anime. Use specific terms: "Niji style", "Studio Ghibli style", "cel-shaded", "vibrant anime aesthetics". Reference Japanese animation techniques.`;
+    } else if (style.toLowerCase().includes('photorealistic') || style.toLowerCase().includes('photo')) {
+        styleRules = `- The style is Photorealistic. Add camera parameters: "8k resolution", "raw photo", "f/2.8 aperture", "85mm lens", "shallow depth of field", "DSLR quality".`;
+    } else if (style.toLowerCase().includes('cyberpunk')) {
+        styleRules = `- The style is Cyberpunk. Use terms: "neon-lit", "dystopian cityscape", "holographic", "rain-soaked streets", "synthwave palette", "augmented reality overlays".`;
+    } else if (style.toLowerCase().includes('oil painting')) {
+        styleRules = `- The style is Oil Painting. Use terms: "impasto brushstrokes", "rich pigments", "canvas texture", "Renaissance chiaroscuro", "classical composition".`;
+    } else {
+        styleRules = `- Apply "${style}" visual style throughout the prompt, using terminology specific to that aesthetic.`;
+    }
+
+    // ── Image model-specific instructions ──
+    let modelRules = '';
+    let formatInstructions = '';
+
+    switch (aiModel) {
+        case 'Midjourney':
+            modelRules = `
+TARGET: Midjourney v6
+- Style: Artistic, concise, evocative.
+- At the END of the positive prompt, ALWAYS append: --ar ${ratio}
+- Also append: ${style.toLowerCase().includes('anime') ? '--niji 6' : '--v 6.0'}
+- Use comma-separated descriptors. Midjourney prefers short, punchy phrases over long sentences.`;
+            formatInstructions = `The Positive Prompt must end with --ar ${ratio} ${style.toLowerCase().includes('anime') ? '--niji 6' : '--v 6.0'}`;
+            break;
+
+        case 'DALL-E 3':
+            modelRules = `
+TARGET: DALL-E 3 (OpenAI)
+- Style: Descriptive, natural language. Write as a coherent paragraph.
+- DO NOT use any technical parameters like --ar, --v, --niji. These are NOT supported.
+- Instead of --ar, describe the aspect ratio in words: "${ratio === '16:9' ? 'Wide landscape format' : ratio === '9:16' ? 'Tall portrait format' : ratio === '4:3' ? 'Classic 4:3 format' : ratio === '21:9' ? 'Ultra-wide cinematic format' : 'Square format'}".
+- Write ONE flowing descriptive paragraph. DALL-E 3 excels with natural language descriptions.
+- Avoid tag-based syntax. Use full sentences.`;
+            formatInstructions = `The Positive Prompt must be a natural language paragraph with NO technical parameters (no --, no :: syntax).`;
+            break;
+
+        case 'Stable Diffusion':
+            modelRules = `
+TARGET: Stable Diffusion XL / Pony
+- Style: Tag-based "tag soup" — comma-separated keywords and phrases.
+- Start with quality tags: (best quality:1.2), (masterpiece:1.2), (highly detailed:1.1)
+- Use weighted emphasis syntax: (important concept:1.3), [less important:0.8]
+- Include technical tags: 8k uhd, sharp focus, intricate details
+- Negative Prompt is CRITICAL for Stable Diffusion — always include comprehensive negative tags.
+- Do NOT use --ar or Midjourney-specific parameters.
+- Express aspect ratio as metadata only if relevant.`;
+            formatInstructions = `The Positive Prompt must use comma-separated tags with weights like (concept:1.2). No --ar or Midjourney syntax.`;
+            break;
+
+        case 'Flux.1':
+            modelRules = `
+TARGET: Flux.1
+- Style: Dry, factual, extremely detailed. No poetic language.
+- Focus heavily on textures, materials, lighting conditions, and rendering quality.
+- Be precise about surfaces (matte, glossy, weathered, translucent).
+- Describe light sources explicitly (directional, ambient, rim lighting, caustics).
+- No --ar or Midjourney-specific parameters.
+- Write a detailed but clinical description. Flux responds best to precise, literal descriptions.`;
+            formatInstructions = `The Positive Prompt must be technically precise and factual with NO poetic embellishment and NO -- parameters.`;
+            break;
+    }
+
+    return `You are a world-class Prompt Engineer specializing in ${aiModel}.
 The user wants to generate content with these specific parameters:
+- Target AI Model: ${aiModel}
 - Style: ${style}
 - Mood: ${mood}
 - Aspect Ratio: ${ratio}
@@ -151,25 +259,17 @@ The user wants to generate content with these specific parameters:
 
 Rules:
 ${styleRules}
+${modelRules}
 - Set the mood to "${mood}" — incorporate atmosphere, lighting, and emotional tone that match this mood.
 - Detail level is "${detail}": ${detailRule}.
-- At the END of the optimized prompt, ALWAYS append the Midjourney aspect ratio parameter: --ar ${ratio}
 
-Principles by target type:
-- For IMAGE generation: Focus on subject, composition, lighting, art style, camera settings, texture, rendering quality.
-- For VIDEO generation: Focus on motion, camera movement, pacing, scene transitions, atmosphere, frame rate.
-- For TEXT generation: Focus on persona, context, constraints, tone, output format.
+CRITICAL: You MUST output the response in this EXACT format:
+[Positive Prompt] ||| [Negative Prompt]
 
-You MUST respond ONLY with valid JSON matching this exact schema:
-{
-  "title": "string — a creative short title",
-  "optimizedPrompt": "string — the full enhanced prompt ending with --ar ${ratio}",
-  "negativePrompt": "string or null — things to avoid",
-  "explanation": "string — brief reasoning for your style and mood choices",
-  "suggestedTags": ["string", "string", "string"]
-}
+${formatInstructions}
+The Negative Prompt lists standard defects to exclude (blur, watermark, bad anatomy, ugly, low quality, deformed, extra limbs, disfigured, text, logo) PLUS any request-specific exclusions.
 
-No markdown, no code fences, no extra text — ONLY the JSON object.`;
+Do NOT add any intro text, explanations, headings, or quotes. Just the two prompts separated by |||.`;
 }
 
 /**
@@ -194,16 +294,24 @@ export async function generateEnhancedPrompt(options: PromptOptions): Promise<En
 
 User's idea: "${options.baseIdea}"
 
-Generate the structured JSON response following the system rules strictly.`;
+Output ONLY: [Positive Prompt] ||| [Negative Prompt]`;
 
     const systemPrompt = buildStructuredSystem(options);
     const content = await callGroq(systemPrompt, userPrompt, 0.7, 1024);
 
-    try {
-        return JSON.parse(content) as EnhancedResult;
-    } catch {
-        throw new Error('Failed to parse structured response from AI. Please try again.');
-    }
+    // Parse the ||| separator
+    const DEFAULT_NEGATIVE = 'blur, watermark, bad anatomy, ugly, low quality, deformed, extra limbs, disfigured, text, logo, cropped';
+    const parts = content.split('|||');
+    const positive = parts[0].trim();
+    const negative = parts[1] ? parts[1].trim() : DEFAULT_NEGATIVE;
+
+    return {
+        title: '',
+        optimizedPrompt: positive,
+        negativePrompt: negative || DEFAULT_NEGATIVE,
+        explanation: '',
+        suggestedTags: [],
+    };
 }
 
 // ═════════════════════════════════════════════════════════

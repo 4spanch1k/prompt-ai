@@ -1,16 +1,14 @@
 import React from 'react';
-import { HistoryItem, TargetModelType } from '../types';
+import { LocalHistoryItem } from '../types';
 import { Icons } from './Icons';
-import { Skeleton } from './Skeleton';
 import styles from './HistorySidebar.module.css';
 
 interface HistorySidebarProps {
-  history: HistoryItem[];
-  onSelect: (item: HistoryItem) => void;
+  history: LocalHistoryItem[];
+  onSelect: (item: LocalHistoryItem) => void;
   onClear: () => void;
   isOpen: boolean;
   onToggle: () => void;
-  loading?: boolean;
 }
 
 const HistorySidebar: React.FC<HistorySidebarProps> = ({
@@ -19,14 +17,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
   onClear,
   isOpen,
   onToggle,
-  loading = false,
 }) => {
-  const getTypeClass = (type: TargetModelType) => {
-    if (type === TargetModelType.IMAGE) return styles.typeImage;
-    if (type === TargetModelType.VIDEO) return styles.typeVideo;
-    return styles.typeText;
-  };
-
   return (
     <>
       {isOpen && (
@@ -56,13 +47,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
           </div>
 
           <div className={styles.list}>
-            {loading ? (
-              <div className={styles.skeletonList}>
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} style={{ height: '5rem', width: '100%' }} />
-                ))}
-              </div>
-            ) : history.length === 0 ? (
+            {history.length === 0 ? (
               <div className={styles.emptyState}>
                 <p className={styles.emptyTitle}>No prompts yet.</p>
                 <p className={styles.emptySub}>Generate one in the main area.</p>
@@ -79,9 +64,6 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                   className={styles.item}
                 >
                   <div className={styles.itemHeader}>
-                    <span className={`${styles.typeBadge} ${getTypeClass(item.type)}`}>
-                      {item.type}
-                    </span>
                     <span className={styles.itemTime}>
                       {new Date(item.timestamp).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -89,8 +71,19 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                       })}
                     </span>
                   </div>
-                  <h4 className={styles.itemTitle}>{item.title}</h4>
-                  <p className={styles.itemIdea}>{item.originalIdea}</p>
+                  <p className={styles.itemIdea}>{item.original}</p>
+                  <p className={styles.itemPositive}>
+                    {item.positive.length > 80
+                      ? item.positive.slice(0, 80) + '…'
+                      : item.positive}
+                  </p>
+                  {item.negative && (
+                    <p className={styles.itemNegative}>
+                      ⛔ {item.negative.length > 50
+                        ? item.negative.slice(0, 50) + '…'
+                        : item.negative}
+                    </p>
+                  )}
                 </button>
               ))
             )}

@@ -156,6 +156,23 @@
     justify-content: space-between;
 }
 
+/* Negative Prompt */
+.negativeSection {
+    margin-top: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+    background-color: rgba(239, 68, 68, 0.04);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    overflow: hidden;
+}
+
+.negativeText {
+    font-size: var(--font-size-sm);
+    color: rgba(239, 68, 68, 0.7);
+    line-height: 1.6;
+    margin-top: 0.5rem;
+}
+
 .outputBox {
     position: relative;
     min-height: 120px;

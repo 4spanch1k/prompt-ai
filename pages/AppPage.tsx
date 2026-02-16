@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { HistoryItem } from '../types';
+import { LocalHistoryItem } from '../types';
 import { useAuth } from '../context/AuthContext';
 import HistorySidebar from '../components/HistorySidebar';
 import { Icons } from '../components/Icons';
@@ -8,45 +8,70 @@ import { PromptOptimizer } from '../components/PromptOptimizer';
 import { toast } from 'sonner';
 import styles from './AppPage.module.css';
 
+const STORAGE_KEY = 'promptcraft_history';
+const MAX_HISTORY = 50;
+
+function loadFromStorage(): LocalHistoryItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToStorage(items: LocalHistoryItem[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX_HISTORY)));
+}
+
 export const AppPage: React.FC = () => {
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
+  const [history, setHistory] = useState<LocalHistoryItem[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [selectedPositive, setSelectedPositive] = useState('');
+  const [selectedNegative, setSelectedNegative] = useState('');
   const { user } = useAuth();
 
+  // Load history from localStorage on mount
   useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      setHistoryLoading(true);
-      try {
-        const { fetchPrompts } = await import('../services/promptsService');
-        const list = await fetchPrompts(user.id);
-        setHistory(list);
-      } catch (e) {
-        console.error('Failed to load prompts', e);
-        toast.error('Failed to load history');
-      } finally {
-        setHistoryLoading(false);
-      }
-    };
-    load();
-  }, [user?.id]);
+    setHistory(loadFromStorage());
+  }, []);
 
-  const handleHistorySelect = (item: HistoryItem) => {
-    // Copy the selected prompt to clipboard
-    navigator.clipboard.writeText(item.optimizedPrompt).then(() => {
-      toast.success('Prompt copied to clipboard!');
-    }).catch(() => {
-      toast.error('Failed to copy');
-    });
-  };
-
-  const clearHistory = () => {
-    if (confirm('Clear local list? Saved prompts in the cloud will remain.')) {
-      setHistory([]);
-      toast.success('List cleared');
+  // Save to localStorage whenever history changes
+  useEffect(() => {
+    if (history.length > 0) {
+      saveToStorage(history);
     }
-  };
+  }, [history]);
+
+  /** Called by PromptOptimizer after successful generation */
+  const handleGenerateSuccess = useCallback(
+    (original: string, positive: string, negative: string) => {
+      const newItem: LocalHistoryItem = {
+        id: crypto.randomUUID(),
+        original,
+        positive,
+        negative,
+        timestamp: Date.now(),
+      };
+      setHistory((prev) => [newItem, ...prev].slice(0, MAX_HISTORY));
+    },
+    [],
+  );
+
+  /** Restore prompts from history item */
+  const handleHistorySelect = useCallback((item: LocalHistoryItem) => {
+    setSelectedPositive(item.positive);
+    setSelectedNegative(item.negative);
+    toast.success('Prompt restored from history');
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    if (confirm('Clear all prompt history?')) {
+      setHistory([]);
+      localStorage.removeItem(STORAGE_KEY);
+      toast.success('History cleared');
+    }
+  }, []);
 
   return (
     <div className={styles.page}>
@@ -83,7 +108,11 @@ export const AppPage: React.FC = () => {
           </div>
 
           <section>
-            <PromptOptimizer />
+            <PromptOptimizer
+              onGenerateSuccess={handleGenerateSuccess}
+              restoredPositive={selectedPositive}
+              restoredNegative={selectedNegative}
+            />
           </section>
         </main>
 
@@ -93,7 +122,6 @@ export const AppPage: React.FC = () => {
           onClear={clearHistory}
           isOpen={isHistoryOpen}
           onToggle={() => setIsHistoryOpen(!isHistoryOpen)}
-          loading={historyLoading}
         />
       </div>
     </div>

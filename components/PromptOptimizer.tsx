@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { generateEnhancedPrompt, describeImage } from '@/services/ai.service';
-import { TargetModelType } from '@/types';
+import { TargetModelType, ImageAIModel, VideoAIModel } from '@/types';
 import {
     saveEnhancedPrompt,
     fetchRecentPrompts,
@@ -24,17 +24,36 @@ import styles from './PromptOptimizer.module.css';
 const STYLE_OPTIONS = ['Photorealistic', 'Anime', 'Cyberpunk', 'Oil Painting', 'Digital Art', 'Minimalist', '3D Render', 'Cinematic'] as const;
 const RATIO_OPTIONS = ['1:1', '16:9', '9:16', '4:3', '21:9'] as const;
 const MOOD_PRESETS = ['Neutral', 'Dark', 'Cheerful', 'Melancholy', 'Epic', 'Dreamy', 'Golden Hour'] as const;
+const IMAGE_MODEL_OPTIONS = ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'Flux.1'] as const;
+const VIDEO_MODEL_OPTIONS = ['Runway Gen-3', 'Luma Dream Machine', 'Kling', 'OpenAI Sora', 'Veo'] as const;
+const CAMERA_OPTIONS = ['Static', 'Zoom In', 'Zoom Out', 'Pan Left', 'Pan Right', 'Truck Left', 'Truck Right', 'Tilt Up', 'Tilt Down', 'Orbit', 'Handheld'] as const;
+type GenerationMode = 'image' | 'video';
 
-export const PromptOptimizer: React.FC = () => {
+interface PromptOptimizerProps {
+    onGenerateSuccess?: (original: string, positive: string, negative: string) => void;
+    restoredPositive?: string;
+    restoredNegative?: string;
+}
+
+export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
+    onGenerateSuccess,
+    restoredPositive,
+    restoredNegative,
+}) => {
     const [input, setInput] = useState('');
     const [output, setOutput] = useState('');
+    const [negativePrompt, setNegativePrompt] = useState('');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [copiedNeg, setCopiedNeg] = useState(false);
     const [history, setHistory] = useState<PromptHistoryItem[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [style, setStyle] = useState<string>('Photorealistic');
     const [ratio, setRatio] = useState<string>('16:9');
     const [mood, setMood] = useState<string>('Neutral');
+    const [model, setModel] = useState<ImageAIModel | VideoAIModel>('Midjourney');
+    const [generationMode, setGenerationMode] = useState<GenerationMode>('image');
+    const [camera, setCamera] = useState<string>('Static');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageBase64, setImageBase64] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,6 +122,14 @@ export const PromptOptimizer: React.FC = () => {
         return unsubscribe;
     }, [user, loadHistory]);
 
+    // Restore prompts from history selection
+    useEffect(() => {
+        if (restoredPositive) {
+            setOutput(restoredPositive);
+            setNegativePrompt(restoredNegative || '');
+        }
+    }, [restoredPositive, restoredNegative]);
+
     const handleEnhance = async () => {
         if (!input.trim() && !imageBase64) {
             toast.error('Enter a prompt idea or upload an image');
@@ -110,8 +137,10 @@ export const PromptOptimizer: React.FC = () => {
         }
         setLoading(true);
         setOutput('');
+        setNegativePrompt('');
         try {
             let enhancedPrompt: string;
+            let negative = '';
 
             if (imageBase64) {
                 // Image-to-Prompt mode
@@ -120,16 +149,26 @@ export const PromptOptimizer: React.FC = () => {
                 // Text-to-Prompt mode
                 const result = await generateEnhancedPrompt({
                     baseIdea: input.trim(),
-                    targetModel: TargetModelType.IMAGE,
+                    targetModel: generationMode === 'video' ? TargetModelType.VIDEO : TargetModelType.IMAGE,
                     style,
                     complexity: 'detailed',
                     aspectRatio: ratio,
                     mood,
+                    aiModel: model,
+                    mode: generationMode,
+                    camera: generationMode === 'video' ? camera : undefined,
                 });
                 enhancedPrompt = result.optimizedPrompt;
+                negative = result.negativePrompt ?? '';
+                console.log('[PromptOptimizer] positive:', enhancedPrompt);
+                console.log('[PromptOptimizer] negative:', negative);
             }
 
             setOutput(enhancedPrompt);
+            setNegativePrompt(negative);
+
+            // Notify parent (AppPage) for localStorage history
+            onGenerateSuccess?.(input.trim() || '[Image Upload]', enhancedPrompt, negative);
 
             if (user) {
                 try {
@@ -159,12 +198,17 @@ export const PromptOptimizer: React.FC = () => {
         }
     };
 
-    const handleCopy = async (text: string) => {
+    const handleCopy = async (text: string, type: 'positive' | 'negative' = 'positive') => {
         try {
             await navigator.clipboard.writeText(text);
-            setCopied(true);
-            toast.success('Prompt copied to clipboard!');
-            setTimeout(() => setCopied(false), 2000);
+            if (type === 'negative') {
+                setCopiedNeg(true);
+                setTimeout(() => setCopiedNeg(false), 2000);
+            } else {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            }
+            toast.success(`${type === 'negative' ? 'Negative prompt' : 'Prompt'} copied!`);
         } catch {
             toast.error('Failed to copy');
         }
@@ -234,41 +278,102 @@ export const PromptOptimizer: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Style Presets */}
+                        {/* Mode Toggle */}
                         <div className={styles.presetsWrap}>
-                            <span className={styles.presetsLabel}>Style</span>
+                            <span className={styles.presetsLabel}>🔀 Mode</span>
                             <div className={styles.presetsList}>
-                                {STYLE_OPTIONS.map((s) => (
+                                <Badge
+                                    variant="outline"
+                                    className={`${styles.presetBadge} ${generationMode === 'image' ? styles.presetBadgeActive : ''}`}
+                                    onClick={() => { setGenerationMode('image'); setModel('Midjourney'); }}
+                                >
+                                    🖼️ Image
+                                </Badge>
+                                <Badge
+                                    variant="outline"
+                                    className={`${styles.presetBadge} ${generationMode === 'video' ? styles.presetBadgeActive : ''}`}
+                                    onClick={() => { setGenerationMode('video'); setModel('Runway Gen-3'); }}
+                                >
+                                    🎬 Video
+                                </Badge>
+                            </div>
+                        </div>
+
+                        {/* Target Model */}
+                        <div className={styles.presetsWrap}>
+                            <span className={styles.presetsLabel}>🎯 Target Model</span>
+                            <div className={styles.presetsList}>
+                                {(generationMode === 'video' ? VIDEO_MODEL_OPTIONS : IMAGE_MODEL_OPTIONS).map((m) => (
                                     <Badge
-                                        key={s}
+                                        key={m}
                                         variant="outline"
-                                        className={`${styles.presetBadge} ${style === s ? styles.presetBadgeActive : ''}`}
-                                        onClick={() => handlePresetClick(s)}
+                                        className={`${styles.presetBadge} ${model === m ? styles.presetBadgeActive : ''}`}
+                                        onClick={() => setModel(m)}
                                     >
-                                        {s}
+                                        {m}
                                     </Badge>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Aspect Ratio */}
-                        <div className={styles.presetsWrap}>
-                            <span className={styles.presetsLabel}>Aspect Ratio</span>
-                            <div className={styles.presetsList}>
-                                {RATIO_OPTIONS.map((r) => (
-                                    <Badge
-                                        key={r}
-                                        variant="outline"
-                                        className={`${styles.presetBadge} ${ratio === r ? styles.presetBadgeActive : ''}`}
-                                        onClick={() => setRatio(r)}
-                                    >
-                                        {r}
-                                    </Badge>
-                                ))}
+                        {/* Image-only: Style Presets */}
+                        {generationMode === 'image' && (
+                            <div className={styles.presetsWrap}>
+                                <span className={styles.presetsLabel}>Style</span>
+                                <div className={styles.presetsList}>
+                                    {STYLE_OPTIONS.map((s) => (
+                                        <Badge
+                                            key={s}
+                                            variant="outline"
+                                            className={`${styles.presetBadge} ${style === s ? styles.presetBadgeActive : ''}`}
+                                            onClick={() => handlePresetClick(s)}
+                                        >
+                                            {s}
+                                        </Badge>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Mood */}
+                        {/* Video-only: Camera Movement */}
+                        {generationMode === 'video' && (
+                            <div className={styles.presetsWrap}>
+                                <span className={styles.presetsLabel}>🎥 Camera</span>
+                                <div className={styles.presetsList}>
+                                    {CAMERA_OPTIONS.map((c) => (
+                                        <Badge
+                                            key={c}
+                                            variant="outline"
+                                            className={`${styles.presetBadge} ${camera === c ? styles.presetBadgeActive : ''}`}
+                                            onClick={() => setCamera(c)}
+                                        >
+                                            {c}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Image-only: Aspect Ratio */}
+                        {generationMode === 'image' && (
+                            <div className={styles.presetsWrap}>
+                                <span className={styles.presetsLabel}>Aspect Ratio</span>
+                                <div className={styles.presetsList}>
+                                    {RATIO_OPTIONS.map((r) => (
+                                        <Badge
+                                            key={r}
+                                            variant="outline"
+                                            className={`${styles.presetBadge} ${ratio === r ? styles.presetBadgeActive : ''}`}
+                                            onClick={() => setRatio(r)}
+                                        >
+                                            {r}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Mood (shared) */}
                         <div className={styles.presetsWrap}>
                             <span className={styles.presetsLabel}>Mood</span>
                             <div className={styles.presetsList}>
@@ -313,12 +418,12 @@ export const PromptOptimizer: React.FC = () => {
                 <Card>
                     <CardContent className={styles.inputSection}>
                         <div className={styles.outputHeader}>
-                            <Label style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>Enhanced prompt</Label>
+                            <Label style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>✅ Enhanced prompt</Label>
                             {output && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleCopy(output)}
+                                    onClick={() => handleCopy(output, 'positive')}
                                     className={styles.copyBtn}
                                 >
                                     {copied ? (
@@ -383,6 +488,42 @@ export const PromptOptimizer: React.FC = () => {
                                 )}
                             </AnimatePresence>
                         </div>
+
+                        {/* Negative Prompt Section */}
+                        <AnimatePresence>
+                            {negativePrompt && !loading && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className={styles.negativeSection}
+                                >
+                                    <div className={styles.outputHeader}>
+                                        <Label style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>🚫 Negative prompt</Label>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleCopy(negativePrompt, 'negative')}
+                                            className={styles.copyBtn}
+                                        >
+                                            {copiedNeg ? (
+                                                <>
+                                                    <Icons.Check style={{ width: '0.875rem', height: '0.875rem', color: 'var(--emerald)' }} />
+                                                    <span className={styles.copiedText}>Copied</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Icons.Copy style={{ width: '0.875rem', height: '0.875rem' }} />
+                                                    Copy
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <p className={styles.negativeText}>{negativePrompt}</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </CardContent>
                 </Card>
             </div>
