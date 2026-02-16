@@ -1,37 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { PromptOptions, EnhancedResult, HistoryItem, TargetModelType } from '../types';
-import { generateEnhancedPrompt } from '../services/geminiService';
-import { savePrompt } from '../services/promptsService';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { HistoryItem } from '../types';
 import { useAuth } from '../context/AuthContext';
-import PromptForm from '../components/PromptForm';
-import ResultCard from '../components/ResultCard';
 import HistorySidebar from '../components/HistorySidebar';
 import { Icons } from '../components/Icons';
 import { PromptOptimizer } from '../components/PromptOptimizer';
-import { ResultSkeleton } from '../components/Skeleton';
 import { toast } from 'sonner';
 import styles from './AppPage.module.css';
 
 export const AppPage: React.FC = () => {
-  const [currentResult, setCurrentResult] = useState<EnhancedResult | null>(null);
-  const [currentType, setCurrentType] = useState<TargetModelType | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const resultSectionRef = useRef<HTMLElement | null>(null);
   const { user } = useAuth();
-  const location = useLocation();
-  const openPrompt = (location.state as { openPrompt?: HistoryItem })?.openPrompt;
-
-  useEffect(() => {
-    if (openPrompt) {
-      setCurrentResult(openPrompt);
-      setCurrentType(openPrompt.type);
-    }
-  }, [openPrompt]);
 
   useEffect(() => {
     if (!user) return;
@@ -51,52 +32,13 @@ export const AppPage: React.FC = () => {
     load();
   }, [user?.id]);
 
-  const handleGenerate = async (options: PromptOptions) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await generateEnhancedPrompt(options);
-      setCurrentResult(result);
-      setCurrentType(options.targetModel);
-
-      const newItem: Omit<HistoryItem, 'id' | 'timestamp'> = {
-        ...result,
-        originalIdea: options.baseIdea,
-        type: options.targetModel,
-      };
-
-      if (user) {
-        const saved = await savePrompt(user.id, newItem);
-        setHistory((prev) => [saved, ...prev]);
-        toast.success('Prompt saved');
-      } else {
-        const fallback: HistoryItem = {
-          ...newItem,
-          id: Date.now().toString(),
-          timestamp: Date.now(),
-        };
-        setHistory((prev) => [fallback, ...prev]);
-      }
-
-      if (window.innerWidth < 768) {
-        setTimeout(() => resultSectionRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleHistorySelect = (item: HistoryItem) => {
-    setCurrentResult(item);
-    setCurrentType(item.type);
-    setError(null);
-    if (window.innerWidth < 768) {
-      setTimeout(() => resultSectionRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    }
+    // Copy the selected prompt to clipboard
+    navigator.clipboard.writeText(item.optimizedPrompt).then(() => {
+      toast.success('Prompt copied to clipboard!');
+    }).catch(() => {
+      toast.error('Failed to copy');
+    });
   };
 
   const clearHistory = () => {
@@ -142,31 +84,6 @@ export const AppPage: React.FC = () => {
 
           <section>
             <PromptOptimizer />
-          </section>
-
-          <section>
-            <PromptForm onSubmit={handleGenerate} isLoading={isLoading} />
-          </section>
-
-          {error && (
-            <div className={styles.error}>
-              <span className={styles.errorLabel}>Error:</span> {error}
-            </div>
-          )}
-
-          <section ref={resultSectionRef} className={styles.resultSection}>
-            {currentResult && currentType !== null ? (
-              <ResultCard result={currentResult} type={currentType} />
-            ) : !isLoading ? (
-              <div className={styles.emptyResult}>
-                <Icons.Sparkles className={styles.emptyIcon} />
-                <p className={styles.emptyTitle}>Ready to generate</p>
-                <p className={styles.emptySub}>Your enhanced prompt will appear here.</p>
-              </div>
-            ) : null}
-            {isLoading && !currentResult && (
-              <ResultSkeleton />
-            )}
           </section>
         </main>
 

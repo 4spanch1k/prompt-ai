@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { enhancePrompt } from '@/services/ai.service';
+import { generateEnhancedPrompt, describeImage } from '@/services/ai.service';
+import { TargetModelType } from '@/types';
 import {
     saveEnhancedPrompt,
     fetchRecentPrompts,
@@ -20,13 +21,9 @@ import { Icons } from '@/components/Icons';
 
 import styles from './PromptOptimizer.module.css';
 
-const STYLE_PRESETS = [
-    { label: 'Cyberpunk', value: 'cyberpunk style' },
-    { label: 'Photorealistic', value: 'photorealistic' },
-    { label: 'Studio Lighting', value: 'studio lighting' },
-    { label: 'Oil Painting', value: 'oil painting style' },
-    { label: 'Macro', value: 'macro photography' },
-] as const;
+const STYLE_OPTIONS = ['Photorealistic', 'Anime', 'Cyberpunk', 'Oil Painting', 'Digital Art', 'Minimalist', '3D Render', 'Cinematic'] as const;
+const RATIO_OPTIONS = ['1:1', '16:9', '9:16', '4:3', '21:9'] as const;
+const MOOD_PRESETS = ['Neutral', 'Dark', 'Cheerful', 'Melancholy', 'Epic', 'Dreamy', 'Golden Hour'] as const;
 
 export const PromptOptimizer: React.FC = () => {
     const [input, setInput] = useState('');
@@ -35,6 +32,38 @@ export const PromptOptimizer: React.FC = () => {
     const [copied, setCopied] = useState(false);
     const [history, setHistory] = useState<PromptHistoryItem[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
+    const [style, setStyle] = useState<string>('Photorealistic');
+    const [ratio, setRatio] = useState<string>('16:9');
+    const [mood, setMood] = useState<string>('Neutral');
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageBase64, setImageBase64] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please upload an image file');
+            return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            toast.error('Image must be under 20MB');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result as string;
+            setImagePreview(result);
+            setImageBase64(result);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const clearImage = () => {
+        setImagePreview(null);
+        setImageBase64(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
 
     const { user } = useAuth();
 
@@ -75,19 +104,37 @@ export const PromptOptimizer: React.FC = () => {
     }, [user, loadHistory]);
 
     const handleEnhance = async () => {
-        if (!input.trim()) {
-            toast.error('Enter a prompt idea first');
+        if (!input.trim() && !imageBase64) {
+            toast.error('Enter a prompt idea or upload an image');
             return;
         }
         setLoading(true);
         setOutput('');
         try {
-            const { enhancedPrompt } = await enhancePrompt(input.trim());
+            let enhancedPrompt: string;
+
+            if (imageBase64) {
+                // Image-to-Prompt mode
+                enhancedPrompt = await describeImage(imageBase64, input.trim() || undefined);
+            } else {
+                // Text-to-Prompt mode
+                const result = await generateEnhancedPrompt({
+                    baseIdea: input.trim(),
+                    targetModel: TargetModelType.IMAGE,
+                    style,
+                    complexity: 'detailed',
+                    aspectRatio: ratio,
+                    mood,
+                });
+                enhancedPrompt = result.optimizedPrompt;
+            }
+
             setOutput(enhancedPrompt);
 
             if (user) {
                 try {
-                    await saveEnhancedPrompt(user.id, input.trim(), enhancedPrompt);
+                    const label = imageBase64 ? '[Image Upload]' : input.trim();
+                    await saveEnhancedPrompt(user.id, label, enhancedPrompt);
                 } catch {
                     // Save failed silently
                 }
@@ -124,10 +171,7 @@ export const PromptOptimizer: React.FC = () => {
     };
 
     const handlePresetClick = (value: string) => {
-        setInput((prev) => {
-            const trimmed = prev.trim();
-            return trimmed ? `${trimmed}, ${value}` : value;
-        });
+        setStyle(value);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -146,31 +190,96 @@ export const PromptOptimizer: React.FC = () => {
                     <CardContent className={styles.inputSection}>
                         <div className={styles.inputSection}>
                             <Label htmlFor="prompt-input" style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
-                                Your idea
+                                {imageBase64 ? 'Additional context (optional)' : 'Your idea'}
                             </Label>
-                            <Input
-                                id="prompt-input"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder='e.g. "a cat sitting on the moon"'
-                                style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border)', minHeight: '48px' }}
-                                disabled={loading}
-                            />
+
+                            {/* Image Preview */}
+                            {imagePreview && (
+                                <div className={styles.imagePreview}>
+                                    <img src={imagePreview} alt="Upload preview" className={styles.imagePreviewImg} />
+                                    <button type="button" onClick={clearImage} className={styles.imageRemoveBtn}>
+                                        ✕
+                                    </button>
+                                    <span className={styles.imagePreviewLabel}>Image-to-Prompt mode</span>
+                                </div>
+                            )}
+
+                            <div className={styles.inputRow}>
+                                <Input
+                                    id="prompt-input"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder={imageBase64 ? 'Add optional context...' : 'e.g. "a cat sitting on the moon"'}
+                                    style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border)', minHeight: '48px', flex: 1 }}
+                                    disabled={loading}
+                                />
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    style={{ display: 'none' }}
+                                />
+                                <Button
+                                    variant="outline"
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={styles.uploadBtn}
+                                    title="Upload reference image"
+                                    disabled={loading}
+                                >
+                                    <Icons.Image style={{ width: '1.125rem', height: '1.125rem' }} />
+                                </Button>
+                            </div>
                         </div>
 
                         {/* Style Presets */}
                         <div className={styles.presetsWrap}>
-                            <span className={styles.presetsLabel}>Quick styles</span>
+                            <span className={styles.presetsLabel}>Style</span>
                             <div className={styles.presetsList}>
-                                {STYLE_PRESETS.map((preset) => (
+                                {STYLE_OPTIONS.map((s) => (
                                     <Badge
-                                        key={preset.value}
+                                        key={s}
                                         variant="outline"
-                                        className={styles.presetBadge}
-                                        onClick={() => handlePresetClick(preset.value)}
+                                        className={`${styles.presetBadge} ${style === s ? styles.presetBadgeActive : ''}`}
+                                        onClick={() => handlePresetClick(s)}
                                     >
-                                        {preset.label}
+                                        {s}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Aspect Ratio */}
+                        <div className={styles.presetsWrap}>
+                            <span className={styles.presetsLabel}>Aspect Ratio</span>
+                            <div className={styles.presetsList}>
+                                {RATIO_OPTIONS.map((r) => (
+                                    <Badge
+                                        key={r}
+                                        variant="outline"
+                                        className={`${styles.presetBadge} ${ratio === r ? styles.presetBadgeActive : ''}`}
+                                        onClick={() => setRatio(r)}
+                                    >
+                                        {r}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Mood */}
+                        <div className={styles.presetsWrap}>
+                            <span className={styles.presetsLabel}>Mood</span>
+                            <div className={styles.presetsList}>
+                                {MOOD_PRESETS.map((m) => (
+                                    <Badge
+                                        key={m}
+                                        variant="outline"
+                                        className={`${styles.presetBadge} ${mood === m ? styles.presetBadgeActive : ''}`}
+                                        onClick={() => setMood(m)}
+                                    >
+                                        {m}
                                     </Badge>
                                 ))}
                             </div>
@@ -178,7 +287,7 @@ export const PromptOptimizer: React.FC = () => {
 
                         <Button
                             onClick={handleEnhance}
-                            disabled={loading || !input.trim()}
+                            disabled={loading || (!input.trim() && !imageBase64)}
                             className={styles.fullButton}
                         >
                             {loading ? (
@@ -195,7 +304,7 @@ export const PromptOptimizer: React.FC = () => {
                         </Button>
 
                         <p className={styles.poweredBy}>
-                            Powered by Groq · llama3-70b
+                            Powered by Groq · llama-3.3-70b
                         </p>
                     </CardContent>
                 </Card>

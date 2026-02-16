@@ -4,7 +4,6 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
-  const apiKey = env.VITE_GEMINI_API_KEY ?? '';
   const groqKey = env.VITE_GROQ_API_KEY ?? '';
   return {
     server: {
@@ -13,7 +12,6 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react()],
     define: {
-      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(apiKey),
       'import.meta.env.VITE_GROQ_API_KEY': JSON.stringify(groqKey),
     },
     resolve: {
