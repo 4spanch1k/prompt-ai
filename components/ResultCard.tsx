@@ -4,6 +4,7 @@ import { EnhancedResult, TargetModelType } from '../types';
 import { Icons } from './Icons';
 import { CopyButton } from './CopyButton';
 import { toast } from 'sonner';
+import styles from './ResultCard.module.css';
 
 interface ResultCardProps {
   result: EnhancedResult;
@@ -36,35 +37,32 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, type }) => {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-zinc-900/60 backdrop-blur-md border border-zinc-800 rounded-2xl overflow-hidden"
+      className={styles.card}
     >
-      <div className="h-px bg-gradient-to-r from-zinc-700 via-zinc-600 to-zinc-700" />
-      <div className="p-6 space-y-6">
-        <div className="flex items-start justify-between gap-4">
+      <div className={styles.topLine} />
+      <div className={styles.body}>
+        <div className={styles.header}>
           <div>
-            <h2 className="text-lg font-semibold text-zinc-100 mb-1">{result.title}</h2>
-            <div className="flex flex-wrap gap-1.5 mt-2">
+            <h2 className={styles.title}>{result.title}</h2>
+            <div className={styles.tags}>
               {result.suggestedTags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 bg-zinc-800 text-zinc-400 text-xs rounded-md border border-zinc-700"
-                >
+                <span key={i} className={styles.tag}>
                   #{tag}
                 </span>
               ))}
             </div>
           </div>
-          <div className="p-2 bg-zinc-800/80 rounded-lg border border-zinc-700 shrink-0">
-            {type === TargetModelType.IMAGE && <Icons.Image className="w-5 h-5 text-violet-400" />}
-            {type === TargetModelType.VIDEO && <Icons.Video className="w-5 h-5 text-pink-400" />}
-            {type === TargetModelType.TEXT && <Icons.Text className="w-5 h-5 text-blue-400" />}
+          <div className={styles.typeIcon}>
+            {type === TargetModelType.IMAGE && <Icons.Image className={`${styles.typeIconSvg} ${styles.violet}`} />}
+            {type === TargetModelType.VIDEO && <Icons.Video className={`${styles.typeIconSvg} ${styles.pink}`} />}
+            {type === TargetModelType.TEXT && <Icons.Text className={`${styles.typeIconSvg} ${styles.blue}`} />}
           </div>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1">
-              <Icons.Sparkles className="w-3 h-3" />
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionLabel}>
+              <Icons.Sparkles className={styles.sectionLabelIcon} />
               Optimized Prompt
             </span>
             <CopyButton
@@ -72,15 +70,15 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, type }) => {
               onCopy={() => copyToClipboard(result.optimizedPrompt)}
             />
           </div>
-          <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 sm:p-4 text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap font-sans focus-within:ring-1 focus-within:ring-white overflow-x-auto">
+          <pre className={styles.promptBox}>
             {result.optimizedPrompt}
           </pre>
         </div>
 
         {result.negativePrompt && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionLabel}>
                 Negative Prompt
               </span>
               <CopyButton
@@ -88,18 +86,18 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, type }) => {
                 onCopy={() => copyToClipboard(result.negativePrompt!, true)}
               />
             </div>
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 sm:p-3">
-              <p className="text-zinc-400 text-sm leading-relaxed">{result.negativePrompt}</p>
+            <div className={styles.negativeBox}>
+              <p className={styles.negativeText}>{result.negativePrompt}</p>
             </div>
           </div>
         )}
 
-        <div className="bg-zinc-800/30 rounded-xl p-4 border border-zinc-800/50">
-          <h3 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
-            <Icons.Magic className="w-4 h-4 text-zinc-400" />
+        <div className={styles.aiLogic}>
+          <h3 className={styles.aiLogicTitle}>
+            <Icons.Magic className={styles.aiLogicIcon} />
             AI Logic
           </h3>
-          <p className="text-zinc-400 text-sm italic">&ldquo;{result.explanation}&rdquo;</p>
+          <p className={styles.aiLogicText}>&ldquo;{result.explanation}&rdquo;</p>
         </div>
       </div>
     </motion.div>

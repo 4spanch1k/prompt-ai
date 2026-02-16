@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Icons } from './Icons';
 import { PromptOptions, TargetModelType } from '../types';
+import styles from './PromptForm.module.css';
 
 interface PromptFormProps {
   onSubmit: (options: PromptOptions) => void;
@@ -32,7 +33,6 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
     { type: TargetModelType.IMAGE, icon: Icons.Image, label: 'Image Generation' },
     { type: TargetModelType.VIDEO, icon: Icons.Video, label: 'Video Generation' },
     { type: TargetModelType.TEXT, icon: Icons.Text, label: 'Text / LLM' },
-    // { type: TargetModelType.AUDIO, icon: Icons.Audio, label: 'Audio / TTS' },
   ];
 
   const stylePresets: Record<TargetModelType, string[]> = {
@@ -42,35 +42,25 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
     [TargetModelType.AUDIO]: ['Natural', 'Dramatic', 'News Anchor', 'Whisper']
   };
 
-  const inputClass =
-    'w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2.5 text-zinc-100 placeholder-zinc-500 text-sm focus:outline-none focus:ring-1 focus:ring-white transition-colors';
-
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-6"
-    >
-      <div className="grid grid-cols-3 gap-2">
+    <form onSubmit={handleSubmit} className={styles.form}>
+      <div className={styles.modelGrid}>
         {modelOptions.map((opt) => (
           <button
             key={opt.type}
             type="button"
             onClick={() => setTargetModel(opt.type)}
-            style={targetModel === opt.type ? { backgroundColor: '#ffffff', color: '#000000' } : { backgroundColor: '#27272a' }}
-            className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white ${targetModel === opt.type
-              ? 'border-white text-zinc-900 shadow-md'
-              : 'border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300'
-              }`}
+            className={`${styles.modelBtn} ${targetModel === opt.type ? styles.modelBtnActive : ''}`}
           >
-            <opt.icon className="w-5 h-5 mb-1.5" />
-            <span className="text-xs font-medium">{opt.label}</span>
+            <opt.icon className={styles.modelIcon} />
+            <span className={styles.modelLabel}>{opt.label}</span>
           </button>
         ))}
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-          <Icons.Sparkles className="w-4 h-4 text-zinc-500" />
+      <div className={styles.fieldGroup}>
+        <label className={styles.fieldLabel}>
+          <Icons.Sparkles className={styles.fieldLabelIcon} />
           What do you want to create?
         </label>
         <textarea
@@ -83,20 +73,20 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
                 ? 'e.g., An email asking for a raise...'
                 : 'Describe your idea...'
           }
-          className={`${inputClass} resize-none h-32`}
+          className={styles.textarea}
           required
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+      <div className={styles.settingsGrid}>
+        <div className={styles.fieldGroup}>
+          <label className={styles.settingLabel}>
             Style / Tone
           </label>
           <select
             value={style}
             onChange={(e) => setStyle(e.target.value)}
-            className={inputClass}
+            className={styles.select}
           >
             {stylePresets[targetModel]?.map((s) => (
               <option key={s} value={s}>
@@ -107,21 +97,17 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
           </select>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+        <div className={styles.fieldGroup}>
+          <label className={styles.settingLabel}>
             Detail Level
           </label>
-          <div className="flex bg-zinc-950 rounded-lg p-1 border border-zinc-800">
+          <div className={styles.toggleGroup}>
             {(['concise', 'balanced', 'detailed'] as const).map((l) => (
               <button
                 key={l}
                 type="button"
                 onClick={() => setComplexity(l)}
-                style={complexity === l ? { backgroundColor: '#ffffff', color: '#000000' } : {}}
-                className={`flex-1 py-1.5 text-xs font-medium rounded-md capitalize transition-colors focus:outline-none focus:ring-1 focus:ring-white ${complexity === l
-                  ? 'text-zinc-900'
-                  : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
+                className={`${styles.toggleBtn} ${complexity === l ? styles.toggleBtnActive : ''}`}
               >
                 {l}
               </button>
@@ -130,14 +116,14 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
         </div>
 
         {(targetModel === TargetModelType.IMAGE || targetModel === TargetModelType.VIDEO) && (
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+          <div className={styles.fieldGroup}>
+            <label className={styles.settingLabel}>
               Aspect Ratio
             </label>
             <select
               value={aspectRatio}
               onChange={(e) => setAspectRatio(e.target.value)}
-              className={inputClass}
+              className={styles.select}
             >
               <option value="1:1">1:1 (Square)</option>
               <option value="16:9">16:9 (Landscape)</option>
@@ -148,8 +134,8 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
           </div>
         )}
 
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+        <div className={styles.fieldGroup}>
+          <label className={styles.settingLabel}>
             {targetModel === TargetModelType.TEXT ? 'Audience / Context' : 'Mood / Lighting'}
           </label>
           <input
@@ -161,7 +147,7 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
                 ? 'e.g., HR Manager'
                 : 'e.g., Golden Hour, Melancholy'
             }
-            className={inputClass}
+            className={styles.textInput}
           />
         </div>
       </div>
@@ -169,16 +155,16 @@ const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading }) => {
       <button
         type="submit"
         disabled={isLoading || !baseIdea.trim()}
-        className="w-full py-3.5 px-6 rounded-xl font-medium text-zinc-900 bg-zinc-100 hover:bg-white hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] focus:outline-none focus:ring-1 focus:ring-white disabled:opacity-50 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
+        className={styles.submitBtn}
       >
         {isLoading ? (
           <>
-            <Icons.Loading className="w-5 h-5 animate-spin" />
+            <Icons.Loading className={`${styles.submitIcon} ${styles.spinIcon}`} />
             Enhancing Prompt...
           </>
         ) : (
           <>
-            <Icons.Magic className="w-5 h-5" />
+            <Icons.Magic className={styles.submitIcon} />
             Generate Pro Prompt
           </>
         )}

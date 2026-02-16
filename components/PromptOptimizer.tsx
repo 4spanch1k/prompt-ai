@@ -18,6 +18,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/Icons';
 
+import styles from './PromptOptimizer.module.css';
+
 const STYLE_PRESETS = [
     { label: 'Cyberpunk', value: 'cyberpunk style' },
     { label: 'Photorealistic', value: 'photorealistic' },
@@ -36,7 +38,6 @@ export const PromptOptimizer: React.FC = () => {
 
     const { user } = useAuth();
 
-    // Load history on mount
     const loadHistory = useCallback(async () => {
         if (!user) return;
         setHistoryLoading(true);
@@ -44,7 +45,7 @@ export const PromptOptimizer: React.FC = () => {
             const items = await fetchRecentPrompts(user.id, 5);
             setHistory(items);
         } catch {
-            // Silently fail — table might not exist yet
+            // Silently fail
         } finally {
             setHistoryLoading(false);
         }
@@ -54,20 +55,17 @@ export const PromptOptimizer: React.FC = () => {
         loadHistory();
     }, [loadHistory]);
 
-    // Realtime subscription
     useEffect(() => {
         if (!user) return;
 
         const unsubscribe = subscribeToPrompts(
             user.id,
-            // On INSERT — add new item to the top (avoid duplicates from own session)
             (newItem) => {
                 setHistory((prev) => {
                     if (prev.some((p) => p.id === newItem.id)) return prev;
                     return [newItem, ...prev].slice(0, 5);
                 });
             },
-            // On DELETE — reload history
             () => {
                 loadHistory();
             }
@@ -87,13 +85,11 @@ export const PromptOptimizer: React.FC = () => {
             const { enhancedPrompt } = await enhancePrompt(input.trim());
             setOutput(enhancedPrompt);
 
-            // Save to Supabase if logged in
             if (user) {
                 try {
                     await saveEnhancedPrompt(user.id, input.trim(), enhancedPrompt);
-                    // Realtime subscription will handle adding to history
                 } catch {
-                    // Save failed silently — don't break the flow
+                    // Save failed silently
                 }
             }
         } catch (err: unknown) {
@@ -142,14 +138,14 @@ export const PromptOptimizer: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className={styles.wrapper}>
             {/* Main Optimizer */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <div className={styles.grid}>
                 {/* Input Side */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardContent className="p-4 md:p-6 space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="prompt-input" className="text-zinc-400 text-sm">
+                <Card>
+                    <CardContent className={styles.inputSection}>
+                        <div className={styles.inputSection}>
+                            <Label htmlFor="prompt-input" style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
                                 Your idea
                             </Label>
                             <Input
@@ -158,20 +154,20 @@ export const PromptOptimizer: React.FC = () => {
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder='e.g. "a cat sitting on the moon"'
-                                className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-zinc-400 min-h-[48px]"
+                                style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border)', minHeight: '48px' }}
                                 disabled={loading}
                             />
                         </div>
 
                         {/* Style Presets */}
-                        <div className="space-y-2">
-                            <span className="text-xs text-zinc-500">Quick styles</span>
-                            <div className="flex flex-wrap gap-2">
+                        <div className={styles.presetsWrap}>
+                            <span className={styles.presetsLabel}>Quick styles</span>
+                            <div className={styles.presetsList}>
                                 {STYLE_PRESETS.map((preset) => (
                                     <Badge
                                         key={preset.value}
                                         variant="outline"
-                                        className="cursor-pointer border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 hover:border-zinc-600 transition-colors select-none"
+                                        className={styles.presetBadge}
                                         onClick={() => handlePresetClick(preset.value)}
                                     >
                                         {preset.label}
@@ -183,47 +179,47 @@ export const PromptOptimizer: React.FC = () => {
                         <Button
                             onClick={handleEnhance}
                             disabled={loading || !input.trim()}
-                            className="w-full min-h-[44px] gap-2"
+                            className={styles.fullButton}
                         >
                             {loading ? (
                                 <>
-                                    <Icons.Loading className="w-4 h-4 animate-spin" />
+                                    <Icons.Loading style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
                                     Enhancing...
                                 </>
                             ) : (
                                 <>
-                                    <Icons.Sparkles className="w-4 h-4" />
+                                    <Icons.Sparkles style={{ width: '1rem', height: '1rem' }} />
                                     Enhance Prompt
                                 </>
                             )}
                         </Button>
 
-                        <p className="text-xs text-zinc-600 text-center">
+                        <p className={styles.poweredBy}>
                             Powered by Groq · llama3-70b
                         </p>
                     </CardContent>
                 </Card>
 
                 {/* Output Side */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardContent className="p-4 md:p-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-zinc-400 text-sm">Enhanced prompt</Label>
+                <Card>
+                    <CardContent className={styles.inputSection}>
+                        <div className={styles.outputHeader}>
+                            <Label style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>Enhanced prompt</Label>
                             {output && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleCopy(output)}
-                                    className="gap-1.5 text-zinc-400 hover:text-zinc-100 h-8"
+                                    className={styles.copyBtn}
                                 >
                                     {copied ? (
                                         <>
-                                            <Icons.Check className="w-3.5 h-3.5 text-emerald-400" />
-                                            <span className="text-emerald-400">Copied</span>
+                                            <Icons.Check style={{ width: '0.875rem', height: '0.875rem', color: 'var(--emerald)' }} />
+                                            <span className={styles.copiedText}>Copied</span>
                                         </>
                                     ) : (
                                         <>
-                                            <Icons.Copy className="w-3.5 h-3.5" />
+                                            <Icons.Copy style={{ width: '0.875rem', height: '0.875rem' }} />
                                             Copy
                                         </>
                                     )}
@@ -231,7 +227,7 @@ export const PromptOptimizer: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="relative min-h-[120px] rounded-lg bg-zinc-950 border border-zinc-800 p-4">
+                        <div className={styles.outputBox}>
                             <AnimatePresence mode="wait">
                                 {loading ? (
                                     <motion.div
@@ -239,19 +235,19 @@ export const PromptOptimizer: React.FC = () => {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="flex flex-col items-center justify-center h-full min-h-[88px] gap-3"
+                                        className={styles.loadingDots}
                                     >
-                                        <div className="flex gap-1">
+                                        <div className={styles.dotsRow}>
                                             {[0, 1, 2].map((i) => (
                                                 <motion.div
                                                     key={i}
-                                                    className="w-2 h-2 rounded-full bg-zinc-500"
+                                                    className={styles.dot}
                                                     animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
                                                     transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
                                                 />
                                             ))}
                                         </div>
-                                        <span className="text-xs text-zinc-600">AI is thinking...</span>
+                                        <span className={styles.thinkingText}>AI is thinking...</span>
                                     </motion.div>
                                 ) : output ? (
                                     <motion.p
@@ -259,7 +255,7 @@ export const PromptOptimizer: React.FC = () => {
                                         initial={{ opacity: 0, y: 6 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.3 }}
-                                        className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap"
+                                        className={styles.resultText}
                                     >
                                         {output}
                                     </motion.p>
@@ -268,10 +264,10 @@ export const PromptOptimizer: React.FC = () => {
                                         key="empty"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        className="flex flex-col items-center justify-center h-full min-h-[88px] text-center"
+                                        className={styles.emptyState}
                                     >
-                                        <Icons.Magic className="w-6 h-6 text-zinc-700 mb-2" />
-                                        <p className="text-sm text-zinc-600">
+                                        <Icons.Magic className={styles.emptyIcon} />
+                                        <p className={styles.emptyText}>
                                             Your enhanced prompt will appear here
                                         </p>
                                     </motion.div>
@@ -284,18 +280,17 @@ export const PromptOptimizer: React.FC = () => {
 
             {/* Prompt History */}
             {user && (
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardContent className="p-4 md:p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <Icons.History className="w-4 h-4 text-zinc-500" />
-                                <span className="text-sm font-medium text-zinc-400">Recent prompts</span>
-                                {/* Live indicator */}
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                <Card>
+                    <CardContent>
+                        <div className={styles.historyHeader}>
+                            <div className={styles.historyTitle}>
+                                <Icons.History className={styles.historyIcon} />
+                                <span className={styles.historyLabel}>Recent prompts</span>
+                                <span className={styles.liveIndicator}>
+                                    <span className={styles.livePing} />
+                                    <span className={styles.liveDot} />
                                 </span>
-                                <span className="text-xs text-zinc-600">Live</span>
+                                <span className={styles.liveText}>Live</span>
                             </div>
 
                             {history.length > 0 && (
@@ -303,25 +298,25 @@ export const PromptOptimizer: React.FC = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={handleClearHistory}
-                                    className="gap-1.5 text-zinc-500 hover:text-red-400 h-8"
+                                    className={styles.clearBtn}
                                 >
-                                    <Icons.Delete className="w-3.5 h-3.5" />
+                                    <Icons.Delete className={styles.clearBtnIcon} />
                                     Clear History
                                 </Button>
                             )}
                         </div>
 
                         {historyLoading ? (
-                            <div className="flex items-center gap-2 text-zinc-600 text-sm py-4">
-                                <Icons.Loading className="w-4 h-4 animate-spin" />
+                            <div className={styles.historyLoading}>
+                                <Icons.Loading style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
                                 Loading...
                             </div>
                         ) : history.length === 0 ? (
-                            <p className="text-sm text-zinc-600 py-4 text-center">
+                            <p className={styles.historyEmpty}>
                                 No prompts yet. Enhanced prompts will appear here.
                             </p>
                         ) : (
-                            <div className="space-y-2">
+                            <div className={styles.historyList}>
                                 {history.map((item, idx) => (
                                     <motion.button
                                         key={item.id}
@@ -330,16 +325,16 @@ export const PromptOptimizer: React.FC = () => {
                                         transition={{ delay: idx * 0.05 }}
                                         type="button"
                                         onClick={() => handleCopy(item.enhanced_prompt)}
-                                        className="w-full text-left p-3 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 transition-all group"
+                                        className={styles.historyItem}
                                     >
-                                        <p className="text-xs text-zinc-500 mb-1 truncate">
+                                        <p className={styles.historyItemOriginal}>
                                             {item.original_prompt}
                                         </p>
-                                        <p className="text-sm text-zinc-300 line-clamp-2 leading-relaxed">
+                                        <p className={styles.historyItemEnhanced}>
                                             {item.enhanced_prompt}
                                         </p>
-                                        <span className="text-xs text-zinc-600 mt-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Icons.Copy className="w-3 h-3" />
+                                        <span className={styles.historyItemHint}>
+                                            <Icons.Copy className={styles.historyItemHintIcon} />
                                             Click to copy
                                         </span>
                                     </motion.button>

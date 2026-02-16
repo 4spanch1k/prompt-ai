@@ -11,6 +11,7 @@ import { Icons } from '../components/Icons';
 import { PromptOptimizer } from '../components/PromptOptimizer';
 import { ResultSkeleton } from '../components/Skeleton';
 import { toast } from 'sonner';
+import styles from './AppPage.module.css';
 
 export const AppPage: React.FC = () => {
   const [currentResult, setCurrentResult] = useState<EnhancedResult | null>(null);
@@ -106,38 +107,35 @@ export const AppPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
-      <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-xl sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors">
-            <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-              <Icons.Magic className="w-4 h-4 text-zinc-300" />
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <Link to="/" className={styles.logoLink}>
+            <div className={styles.logoBox}>
+              <Icons.Magic className={styles.logoBoxIcon} />
             </div>
-            <span className="font-semibold text-gradient-animate">PromptCraft AI</span>
+            <span className={`${styles.logoText} text-gradient-animate`}>PromptCraft AI</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/dashboard"
-              className="text-sm text-zinc-400 hover:text-zinc-100 hidden sm:inline"
-            >
+          <nav className={styles.headerNav}>
+            <Link to="/dashboard" className={styles.dashboardLink}>
               Dashboard
             </Link>
             <button
               type="button"
               onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-              className="lg:hidden p-2 text-zinc-400 hover:text-zinc-100 rounded-lg hover:bg-zinc-800/50"
+              className={styles.historyBtn}
             >
-              <Icons.History className="w-5 h-5" />
+              <Icons.History className={styles.historyBtnIcon} />
             </button>
-          </div>
+          </nav>
         </div>
       </header>
 
-      <div className="flex-1 flex w-full max-w-7xl mx-auto lg:px-4">
-        <main className="flex-1 min-w-0 p-4 md:p-6 lg:p-8 flex flex-col gap-8 max-w-4xl w-full">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-zinc-100">Create Pro-Level Prompts</h2>
-            <p className="text-zinc-400 text-sm">
+      <div className={styles.layout}>
+        <main className={styles.mainContent}>
+          <div className={styles.intro}>
+            <h2 className={styles.introTitle}>Create Pro-Level Prompts</h2>
+            <p className={styles.introDesc}>
               Describe your idea; we&apos;ll turn it into a detailed prompt for Midjourney, Runway, ChatGPT, and more.
             </p>
           </div>
@@ -151,19 +149,19 @@ export const AppPage: React.FC = () => {
           </section>
 
           {error && (
-            <div className="p-4 rounded-xl border border-zinc-800 bg-red-950/20 text-red-300 text-sm flex items-center gap-2">
-              <span className="font-medium">Error:</span> {error}
+            <div className={styles.error}>
+              <span className={styles.errorLabel}>Error:</span> {error}
             </div>
           )}
 
-          <section ref={resultSectionRef} className="scroll-mt-24">
+          <section ref={resultSectionRef} className={styles.resultSection}>
             {currentResult && currentType !== null ? (
               <ResultCard result={currentResult} type={currentType} />
             ) : !isLoading ? (
-              <div className="min-h-64 border border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center text-zinc-500 p-8 text-center">
-                <Icons.Sparkles className="w-10 h-10 mb-4 opacity-50" />
-                <p className="font-medium text-zinc-400">Ready to generate</p>
-                <p className="text-sm mt-1">Your enhanced prompt will appear here.</p>
+              <div className={styles.emptyResult}>
+                <Icons.Sparkles className={styles.emptyIcon} />
+                <p className={styles.emptyTitle}>Ready to generate</p>
+                <p className={styles.emptySub}>Your enhanced prompt will appear here.</p>
               </div>
             ) : null}
             {isLoading && !currentResult && (

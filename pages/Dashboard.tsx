@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Icons } from '../components/Icons';
+import styles from './Dashboard.module.css';
 
 interface Prompt {
   id: string;
@@ -56,44 +57,44 @@ export const Dashboard = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  const getTypeClass = (type: string) => {
+    if (type === 'IMAGE') return styles.typeImage;
+    if (type === 'VIDEO') return styles.typeVideo;
+    return styles.typeText;
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Icons.Loading className="w-8 h-8 text-zinc-400 animate-spin" />
+      <div className={styles.loading}>
+        <Icons.Loading className={styles.spinIcon} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-10">
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <header className={styles.header}>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-100">Your Dashboard</h1>
-            <p className="text-zinc-400 mt-1 text-sm sm:text-base">Manage and organize your generated prompts.</p>
+            <h1 className={styles.title}>Your Dashboard</h1>
+            <p className={styles.subtitle}>Manage and organize your generated prompts.</p>
           </div>
-          <Link
-            to="/app"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-zinc-950 px-5 py-3 rounded-lg font-medium hover:bg-zinc-200 transition-colors shrink-0 min-h-[44px]"
-          >
-            <Icons.Magic className="w-4 h-4" />
+          <Link to="/app" className={styles.newBtn}>
+            <Icons.Magic className={styles.newBtnIcon} />
             New Prompt
           </Link>
         </header>
 
         {prompts.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-zinc-800 rounded-2xl">
-            <div className="bg-zinc-900/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Icons.Sparkles className="w-8 h-8 text-zinc-500" />
+          <div className={styles.empty}>
+            <div className={styles.emptyIconWrap}>
+              <Icons.Sparkles className={styles.emptyIcon} />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">No prompts yet</h3>
-            <p className="text-zinc-500 mb-6 max-w-sm mx-auto">
+            <h3 className={styles.emptyTitle}>No prompts yet</h3>
+            <p className={styles.emptySub}>
               Create your first AI prompt to see it appear here in your collection.
             </p>
-            <Link
-              to="/app"
-              className="text-primary-400 hover:text-primary-300 font-medium"
-            >
+            <Link to="/app" className={styles.emptyLink}>
               Start Creating &rarr;
             </Link>
           </div>
@@ -102,41 +103,38 @@ export const Dashboard = () => {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+            className={styles.grid}
           >
             {prompts.map((prompt) => (
               <motion.div
                 key={prompt.id}
                 variants={item}
-                className="group bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 hover:border-zinc-700 transition-all hover:shadow-xl hover:shadow-zinc-900/20"
+                className={styles.card}
               >
-                <div className="flex justify-between items-start mb-3 sm:mb-4">
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${prompt.type === 'IMAGE' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                    prompt.type === 'VIDEO' ? 'bg-pink-500/10 text-pink-400 border-pink-500/20' :
-                      'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                    }`}>
+                <div className={styles.cardHeader}>
+                  <span className={`${styles.typeBadge} ${getTypeClass(prompt.type)}`}>
                     {prompt.type}
                   </span>
-                  <span className="text-xs text-zinc-500">
+                  <span className={styles.cardDate}>
                     {new Date(prompt.created_at).toLocaleDateString()}
                   </span>
                 </div>
 
-                <h3 className="font-semibold text-base sm:text-lg mb-2 line-clamp-1 group-hover:text-white transition-colors">
+                <h3 className={styles.cardTitle}>
                   {prompt.title || "Untitled Prompt"}
                 </h3>
 
-                <p className="text-zinc-400 text-sm line-clamp-3 mb-3 sm:mb-4 h-16">
+                <p className={styles.cardIdea}>
                   {prompt.original_idea}
                 </p>
 
-                <div className="flex items-center gap-3 pt-3 sm:pt-4 border-t border-zinc-800/50">
-                  <button className="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1.5 min-h-[44px] sm:min-h-0">
-                    <Icons.Copy className="w-3.5 h-3.5 sm:w-3 sm:h-3" /> Copy
+                <div className={styles.cardActions}>
+                  <button className={styles.copyBtn}>
+                    <Icons.Copy className={styles.copyBtnIcon} /> Copy
                   </button>
-                  <div className="flex-1" />
-                  <button className="text-xs text-zinc-500 hover:text-red-400 transition-colors min-h-[44px] sm:min-h-0 flex items-center">
-                    <Icons.Delete className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
+                  <div className={styles.spacer} />
+                  <button className={styles.deleteBtn}>
+                    <Icons.Delete className={styles.deleteBtnIcon} />
                   </button>
                 </div>
               </motion.div>

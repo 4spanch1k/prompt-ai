@@ -1,0 +1,108 @@
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    font-family: var(--font-main);
+    transition: background-color var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast);
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--bg-page), 0 0 0 4px var(--text-muted);
+}
+
+.button:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.button svg {
+    pointer-events: none;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+}
+
+/* Variants */
+.default {
+    background-color: var(--primary);
+    color: var(--primary-fg);
+    box-shadow: var(--shadow-sm);
+}
+
+.default:hover {
+    background-color: #e4e4e7;
+}
+
+.ghost {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.ghost:hover {
+    background-color: var(--bg-element);
+    color: var(--text-secondary);
+}
+
+.outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+.outline:hover {
+    background-color: var(--bg-element);
+}
+
+.destructive {
+    background-color: #7f1d1d;
+    color: #fef2f2;
+    box-shadow: var(--shadow-sm);
+}
+
+.destructive:hover {
+    background-color: #991b1b;
+}
+
+.link {
+    background: transparent;
+    color: var(--primary);
+    text-decoration-line: underline;
+    text-underline-offset: 4px;
+}
+
+/* Sizes */
+.sizeDefault {
+    height: 2.25rem;
+    padding: 0.5rem 1rem;
+}
+
+.sizeSm {
+    height: 2rem;
+    padding: 0.25rem 0.75rem;
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-md);
+}
+
+.sizeLg {
+    height: 2.5rem;
+    padding: 0.5rem 2rem;
+}
+
+.sizeIcon {
+    height: 2.25rem;
+    width: 2.25rem;
+    padding: 0;
+}

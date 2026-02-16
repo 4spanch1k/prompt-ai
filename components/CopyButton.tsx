@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icons } from './Icons';
+import styles from './CopyButton.module.css';
 
 interface CopyButtonProps {
   onCopy: () => void;
@@ -18,7 +19,7 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
   <button
     type="button"
     onClick={onCopy}
-    className={`inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-100 transition-colors focus:outline-none focus:ring-1 focus:ring-white rounded px-2 py-1 ${className}`}
+    className={`${styles.button} ${className}`}
   >
     <AnimatePresence mode="wait">
       {copied ? (
@@ -28,9 +29,9 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-          className="text-emerald-400"
+          className={styles.iconCopied}
         >
-          <Icons.Check className="w-3.5 h-3.5" />
+          <Icons.Check style={{ width: '0.875rem', height: '0.875rem' }} />
         </motion.span>
       ) : (
         <motion.span
@@ -40,7 +41,7 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
           exit={{ scale: 0, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 500, damping: 25 }}
         >
-          <Icons.Copy className="w-3.5 h-3.5" />
+          <Icons.Copy style={{ width: '0.875rem', height: '0.875rem' }} />
         </motion.span>
       )}
     </AnimatePresence>

@@ -1,0 +1,55 @@
+.badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    padding: 0.125rem 0.625rem;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    font-family: var(--font-main);
+    transition: color var(--transition-fast),
+        background-color var(--transition-fast),
+        border-color var(--transition-fast);
+}
+
+.badge:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--bg-page), 0 0 0 4px var(--text-muted);
+}
+
+/* Variants */
+.default {
+    border-color: transparent;
+    background-color: var(--primary);
+    color: var(--primary-fg);
+    box-shadow: var(--shadow-sm);
+}
+
+.default:hover {
+    opacity: 0.8;
+}
+
+.secondary {
+    border-color: transparent;
+    background-color: var(--bg-element);
+    color: var(--text-secondary);
+}
+
+.secondary:hover {
+    opacity: 0.8;
+}
+
+.destructive {
+    border-color: transparent;
+    background-color: #7f1d1d;
+    color: #fef2f2;
+    box-shadow: var(--shadow-sm);
+}
+
+.destructive:hover {
+    opacity: 0.8;
+}
+
+.outline {
+    color: var(--text-secondary);
+}

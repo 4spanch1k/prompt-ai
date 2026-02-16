@@ -1,47 +1,50 @@
 import React from 'react';
+import styles from './Skeleton.module.css';
 
 interface SkeletonProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export const Skeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
+export const Skeleton: React.FC<SkeletonProps> = ({ className = '', style }) => (
   <div
-    className={`animate-pulse rounded-lg bg-zinc-800/80 ${className}`}
+    className={`${styles.skeleton} ${className}`}
+    style={style}
     aria-hidden
   />
 );
 
 export const ResultSkeleton: React.FC = () => (
-  <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden">
-    <div className="h-1 bg-zinc-800" />
-    <div className="p-6 space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-48" />
-        <div className="flex gap-2">
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-5 w-20 rounded-full" />
-          <Skeleton className="h-5 w-14 rounded-full" />
+  <div className={styles.resultSkeleton}>
+    <div className={styles.resultSkeletonLine} />
+    <div className={styles.resultSkeletonBody}>
+      <div className={styles.resultSkeletonGroup}>
+        <Skeleton style={{ height: '1.5rem', width: '12rem' }} />
+        <div className={styles.resultSkeletonTags}>
+          <Skeleton style={{ height: '1.25rem', width: '4rem', borderRadius: 'var(--radius-full)' }} />
+          <Skeleton style={{ height: '1.25rem', width: '5rem', borderRadius: 'var(--radius-full)' }} />
+          <Skeleton style={{ height: '1.25rem', width: '3.5rem', borderRadius: 'var(--radius-full)' }} />
         </div>
       </div>
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-24 w-full" />
+      <div className={styles.resultSkeletonGroup}>
+        <Skeleton style={{ height: '1rem', width: '8rem' }} />
+        <Skeleton style={{ height: '6rem', width: '100%' }} />
       </div>
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-16 w-full" />
+      <div className={styles.resultSkeletonGroup}>
+        <Skeleton style={{ height: '1rem', width: '6rem' }} />
+        <Skeleton style={{ height: '4rem', width: '100%' }} />
       </div>
     </div>
   </div>
 );
 
 export const CardSkeleton: React.FC = () => (
-  <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 space-y-3">
-    <div className="flex justify-between">
-      <Skeleton className="h-4 w-20 rounded" />
-      <Skeleton className="h-4 w-12 rounded" />
+  <div className={styles.cardSkeleton}>
+    <div className={styles.cardSkeletonRow}>
+      <Skeleton style={{ height: '1rem', width: '5rem' }} />
+      <Skeleton style={{ height: '1rem', width: '3rem' }} />
     </div>
-    <Skeleton className="h-5 w-full" />
-    <Skeleton className="h-4 w-3/4" />
+    <Skeleton style={{ height: '1.25rem', width: '100%' }} />
+    <Skeleton style={{ height: '1rem', width: '75%' }} />
   </div>
 );

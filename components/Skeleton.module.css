@@ -1,0 +1,64 @@
+.skeleton {
+    border-radius: var(--radius-lg);
+    background-color: rgba(39, 39, 42, 0.8);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Result skeleton */
+.resultSkeleton {
+    background-color: rgba(24, 24, 27, 0.6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+}
+
+.resultSkeletonLine {
+    height: 1px;
+    background-color: var(--bg-element);
+}
+
+.resultSkeletonBody {
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.resultSkeletonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.resultSkeletonTags {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+/* Card skeleton */
+.cardSkeleton {
+    background-color: rgba(24, 24, 27, 0.6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cardSkeletonRow {
+    display: flex;
+    justify-content: space-between;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}

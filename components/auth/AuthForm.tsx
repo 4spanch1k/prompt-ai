@@ -16,6 +16,7 @@ import {
     CardTitle,
 } from '../ui/card';
 import { Icons } from '../Icons';
+import styles from './AuthForm.module.css';
 
 const GoogleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg viewBox="0 0 24 24" {...props}>
@@ -79,7 +80,6 @@ export const AuthForm: React.FC = () => {
         try {
             const { error } = await signInWithGoogle();
             if (error) throw error;
-            // OAuth will redirect, no need to navigate
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to sign in with Google';
             toast.error(message);
@@ -92,58 +92,58 @@ export const AuthForm: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-sm mx-auto"
+            className={styles.wrapper}
         >
             {/* Logo */}
-            <div className="flex justify-center mb-8">
-                <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors">
-                    <Icons.Magic className="w-5 h-5" />
-                    <span className="font-semibold text-gradient-animate">PromptCraft AI</span>
+            <div className={styles.logoWrap}>
+                <Link to="/" className={styles.logoLink}>
+                    <Icons.Magic className={styles.logoIcon} />
+                    <span className="text-gradient-animate" style={{ fontWeight: 600 }}>PromptCraft AI</span>
                 </Link>
             </div>
 
-            <Card className="bg-zinc-900/60 border-zinc-800">
-                <CardHeader className="space-y-1 pb-4">
-                    <CardTitle className="text-xl text-zinc-100">
+            <Card className={styles.cardStyle}>
+                <CardHeader className={styles.headerWrap}>
+                    <CardTitle className={styles.titleText}>
                         {isSignUp ? 'Create account' : 'Welcome back'}
                     </CardTitle>
-                    <CardDescription className="text-zinc-500">
+                    <CardDescription className={styles.descText}>
                         {isSignUp ? 'Sign up to start creating AI prompts.' : 'Sign in to continue creating.'}
                     </CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className={styles.contentWrap}>
                     {/* Google OAuth Button */}
                     <Button
                         variant="outline"
-                        className="w-full border-zinc-700 bg-zinc-950 text-zinc-100 hover:bg-zinc-800 hover:text-zinc-50 min-h-[44px]"
+                        className={styles.googleBtn}
                         onClick={handleGoogleLogin}
                         disabled={googleLoading || loading}
                     >
                         {googleLoading ? (
-                            <Icons.Loading className="w-4 h-4 animate-spin" />
+                            <Icons.Loading className={`${styles.googleIcon} ${styles.spinIcon}`} />
                         ) : (
-                            <GoogleIcon className="w-4 h-4" />
+                            <GoogleIcon className={styles.googleIcon} />
                         )}
                         {googleLoading ? 'Connecting...' : 'Continue with Google'}
                     </Button>
 
                     {/* Divider */}
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-zinc-800" />
+                    <div className={styles.divider}>
+                        <div className={styles.dividerLine}>
+                            <span className={styles.dividerBorder} />
                         </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-zinc-900/60 px-2 text-zinc-500">
+                        <div className={styles.dividerTextWrap}>
+                            <span className={styles.dividerText}>
                                 Or continue with email
                             </span>
                         </div>
                     </div>
 
                     {/* Email/Password Form */}
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email" className="text-zinc-400">
+                    <form onSubmit={handleSubmit} className={styles.formFields}>
+                        <div className={styles.fieldGroup}>
+                            <Label htmlFor="email" className={styles.fieldLabel}>
                                 Email
                             </Label>
                             <Input
@@ -154,12 +154,12 @@ export const AuthForm: React.FC = () => {
                                 placeholder="you@example.com"
                                 required
                                 autoComplete="email"
-                                className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-zinc-400"
+                                className={styles.fieldInput}
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="password" className="text-zinc-400">
+                        <div className={styles.fieldGroup}>
+                            <Label htmlFor="password" className={styles.fieldLabel}>
                                 Password
                             </Label>
                             <Input
@@ -171,18 +171,18 @@ export const AuthForm: React.FC = () => {
                                 required
                                 minLength={6}
                                 autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                                className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-zinc-400"
+                                className={styles.fieldInput}
                             />
                         </div>
 
                         <Button
                             type="submit"
                             disabled={loading || googleLoading}
-                            className="w-full min-h-[44px]"
+                            className={styles.submitBtn}
                         >
                             {loading ? (
                                 <>
-                                    <Icons.Loading className="w-4 h-4 animate-spin" />
+                                    <Icons.Loading className={`${styles.googleIcon} ${styles.spinIcon}`} />
                                     {isSignUp ? 'Creating...' : 'Signing in...'}
                                 </>
                             ) : (
@@ -192,13 +192,13 @@ export const AuthForm: React.FC = () => {
                     </form>
                 </CardContent>
 
-                <CardFooter className="flex flex-col gap-4 pt-0">
-                    <p className="text-center text-sm text-zinc-500 w-full">
+                <CardFooter className={styles.footerWrap}>
+                    <p className={styles.footerText}>
                         {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
                         <button
                             type="button"
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-zinc-300 hover:text-zinc-100 underline underline-offset-2 transition-colors"
+                            className={styles.switchBtn}
                         >
                             {isSignUp ? 'Sign in' : 'Sign up'}
                         </button>
@@ -206,8 +206,8 @@ export const AuthForm: React.FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="mt-6 text-center">
-                <Link to="/" className="text-sm text-zinc-500 hover:text-zinc-400 transition-colors">
+            <p className={styles.backLink}>
+                <Link to="/" className={styles.backLinkA}>
                     ← Back to home
                 </Link>
             </p>

@@ -1,0 +1,233 @@
+.page {
+    min-height: 100vh;
+    background-color: var(--bg-page);
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.header {
+    border-bottom: 1px solid var(--border);
+    background-color: rgba(9, 9, 11, 0.8);
+    backdrop-filter: blur(16px);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.headerInner {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 0 var(--space-md);
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+}
+
+@media (min-width: 640px) {
+    .headerInner {
+        padding: 0 var(--space-lg);
+        height: 4rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .headerInner {
+        padding: 0 var(--space-xl);
+    }
+}
+
+.logoLink {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.logoLink:hover {
+    color: var(--text-secondary);
+}
+
+.logoBox {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-lg);
+    background-color: var(--bg-element);
+    border: 1px solid var(--border-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logoBoxIcon {
+    width: 1rem;
+    height: 1rem;
+    color: #d4d4d8;
+}
+
+.logoText {
+    font-weight: 600;
+}
+
+.headerNav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.dashboardLink {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+    display: none;
+}
+
+.dashboardLink:hover {
+    color: var(--text-secondary);
+}
+
+@media (min-width: 640px) {
+    .dashboardLink {
+        display: inline;
+    }
+}
+
+.historyBtn {
+    padding: var(--space-sm);
+    color: var(--text-muted);
+    border-radius: var(--radius-lg);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: var(--font-main);
+}
+
+.historyBtn:hover {
+    color: var(--text-secondary);
+    background-color: rgba(39, 39, 42, 0.5);
+}
+
+@media (min-width: 1024px) {
+    .historyBtn {
+        display: none;
+    }
+}
+
+.historyBtnIcon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Layout */
+.layout {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+    .layout {
+        padding: 0 var(--space-md);
+    }
+}
+
+.mainContent {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 56rem;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .mainContent {
+        padding: var(--space-lg);
+    }
+}
+
+@media (min-width: 1024px) {
+    .mainContent {
+        padding: var(--space-xl);
+    }
+}
+
+.intro {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.introTitle {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.introDesc {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+/* Error */
+.error {
+    padding: var(--space-md);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+    background-color: rgba(127, 29, 29, 0.2);
+    color: #fca5a5;
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.errorLabel {
+    font-weight: 500;
+}
+
+/* Empty state */
+.resultSection {
+    scroll-margin-top: 6rem;
+}
+
+.emptyResult {
+    min-height: 16rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-2xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    padding: 2rem;
+    text-align: center;
+}
+
+.emptyIcon {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: var(--space-md);
+    opacity: 0.5;
+}
+
+.emptyTitle {
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.emptySub {
+    font-size: var(--font-size-sm);
+    margin-top: 0.25rem;
+}
