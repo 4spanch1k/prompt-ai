@@ -76,11 +76,21 @@
     padding: 0.25rem 0.75rem;
     border-radius: var(--radius-md);
     text-decoration: none;
-    transition: background-color var(--transition-fast);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0);
 }
 
 .getStartedLink:hover {
     background-color: #e4e4e7;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.25),
+        0 4px 12px rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.getStartedLink:active {
+    transform: translateY(0) scale(0.96);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+    transition-duration: 0.1s;
 }
 
 /* Hero */
@@ -177,13 +187,21 @@
     color: var(--primary-fg);
     font-weight: 500;
     text-decoration: none;
-    transition: all var(--transition-fast);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: var(--font-size-sm);
+    transform: translateY(0);
 }
 
 .ctaPrimary:hover {
     background-color: #e4e4e7;
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.ctaPrimary:active {
+    transform: translateY(0) scale(0.96);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+    transition-duration: 0.1s;
 }
 
 .ctaPrimaryIcon {
@@ -204,86 +222,16 @@
     background: transparent;
     font-weight: 500;
     text-decoration: none;
-    transition: all var(--transition-fast);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: var(--font-size-sm);
 }
 
 .ctaSecondary:hover {
     background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
-/* Social section */
-.socialSection {
-    width: 100%;
-    max-width: 42rem;
-    text-align: center;
-}
-
-.socialLabel {
-    color: var(--text-dim);
-    font-size: var(--font-size-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: var(--space-md);
-}
-
-.socialLinks {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    justify-content: center;
-}
-
-@media (min-width: 640px) {
-    .socialLinks {
-        flex-direction: row;
-    }
-}
-
-.instagramLink {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-sm);
-    padding: 0.75rem 1.25rem;
-    border-radius: var(--radius-lg);
-    background: linear-gradient(to right, var(--purple), #ec4899);
-    color: var(--primary);
-    font-weight: 500;
-    text-decoration: none;
-    transition: box-shadow var(--transition-fast);
-    min-height: 48px;
-    font-size: var(--font-size-sm);
-}
-
-.instagramLink:hover {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
-}
-
-.tiktokLink {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-sm);
-    padding: 0.75rem 1.25rem;
-    border-radius: var(--radius-lg);
-    background-color: var(--bg-element);
-    border: 1px solid var(--border-hover);
-    color: var(--text-secondary);
-    font-weight: 500;
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    min-height: 48px;
-    font-size: var(--font-size-sm);
-}
-
-.tiktokLink:hover {
-    background-color: var(--bg-hover);
-    border-color: #52525b;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-}
-
-.socialIcon {
-    width: 1rem;
-    height: 1rem;
+.ctaSecondary:active {
+    transform: scale(0.96);
+    transition-duration: 0.1s;
 }

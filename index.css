@@ -1,3 +1,6 @@
+/* ===== Design tokens ===== */
+@import './src/styles/variables.css';
+
 /* ===== Global Reset & Base ===== */
 *,
 *::before,
@@ -26,24 +29,13 @@ body {
   min-height: 100vh;
 }
 
-/* ===== Animated gradient text (used globally) ===== */
-@keyframes gradient-x {
-
-  0%,
-  100% {
-    background-position: 0% 50%;
+/* ===== Shared keyframes ===== */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
 
-  50% {
-    background-position: 100% 50%;
+  to {
+    transform: rotate(360deg);
   }
-}
-
-.text-gradient-animate {
-  background: linear-gradient(270deg, #818cf8, #22d3ee, #a78bfa, #818cf8);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradient-x 6s ease infinite;
 }

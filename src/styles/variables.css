@@ -53,7 +53,7 @@
     --radius-full: 9999px;
 
     /* Fonts */
-    --font-main: system-ui, -apple-system, sans-serif;
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
     --font-size-base: 1rem;
