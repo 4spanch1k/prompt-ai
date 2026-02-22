@@ -1,5 +1,6 @@
 import {
   Wand2,
+  PenLine,
   Image as ImageIcon,
   Video,
   FileText,
@@ -19,6 +20,7 @@ import {
 
 export const Icons = {
   Magic: Wand2,
+  Logo: PenLine,
   Image: ImageIcon,
   Video: Video,
   Text: FileText,

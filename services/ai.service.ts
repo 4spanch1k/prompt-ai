@@ -1,4 +1,4 @@
-import { PromptOptions, EnhancedResult, TargetModelType } from '../types';
+import { PromptOptions, GenerationResult, PromptVariant, TargetModelType } from '../types';
 
 /* ══════════════════════════════════════════════════════════
  *  Groq AI Service — PromptCraft AI
@@ -112,6 +112,26 @@ export async function enhancePrompt(userPrompt: string): Promise<GroqResponse> {
 // ═════════════════════════════════════════════════════════
 
 /**
+ * Shared format instruction appended to all system prompts.
+ * Requires the LLM to output valid JSON with 3 named variants.
+ */
+const VARIATIONS_FORMAT_INSTRUCTION = `
+CRITICAL: Generate 3 DISTINCT prompt variations. Output MUST be valid JSON (no markdown, no code fences, no extra text).
+
+Structure:
+{
+  "balanced": { "positive": "...", "negative": "..." },
+  "creative": { "positive": "...", "negative": "..." },
+  "artistic": { "positive": "...", "negative": "..." }
+}
+
+- "balanced": Follows the user's instructions precisely and faithfully.
+- "creative": Adds unique details, unexpected angles, dramatic lighting, and inventive composition.
+- "artistic": Focuses heavily on style, mood, and aesthetics — cinematic color grading, painterly textures, emotional atmosphere.
+
+Each variant MUST have both "positive" and "negative" strings. Output ONLY the raw JSON object, nothing else.`;
+
+/**
  * Builds a dynamic system prompt based on the user's chosen
  * style, mood, aspect ratio, detail level, target AI model, and mode.
  */
@@ -166,15 +186,9 @@ Rules:
 - Detail level is "${detail}": ${detailRule}.
 - Describe motion, physics, and temporal flow (slow-motion, time-lapse, real-time).
 - Do NOT use image-only parameters like --ar, --v, --niji.
-- Write a vivid cinematic scene description.
 
-CRITICAL: You MUST output the response in this EXACT format:
-[Positive Prompt] ||| [Negative Prompt]
-
-The Positive Prompt describes the full video scene with camera movement and action.
-The Negative Prompt lists things to avoid: static image, freeze frame, blurry, jittery, low fps, watermark, text overlay, distortion, morphing artifacts.
-
-Do NOT add any intro text, explanations, headings, or quotes. Just the two prompts separated by |||.`;
+${VARIATIONS_FORMAT_INSTRUCTION}
+Negative prompts for video should include: static image, freeze frame, blurry, jittery, low fps, watermark, text overlay, distortion, morphing artifacts.`;
     }
 
     // ════════════════════════════════
@@ -262,27 +276,80 @@ ${styleRules}
 ${modelRules}
 - Set the mood to "${mood}" — incorporate atmosphere, lighting, and emotional tone that match this mood.
 - Detail level is "${detail}": ${detailRule}.
-
-CRITICAL: You MUST output the response in this EXACT format:
-[Positive Prompt] ||| [Negative Prompt]
-
 ${formatInstructions}
-The Negative Prompt lists standard defects to exclude (blur, watermark, bad anatomy, ugly, low quality, deformed, extra limbs, disfigured, text, logo) PLUS any request-specific exclusions.
 
-Do NOT add any intro text, explanations, headings, or quotes. Just the two prompts separated by |||.`;
+${VARIATIONS_FORMAT_INSTRUCTION}
+Negative prompts should include standard defects: blur, watermark, bad anatomy, ugly, low quality, deformed, extra limbs, disfigured, text, logo — plus any request-specific exclusions.`;
+}
+
+/** Default negative prompt used as fallback */
+const DEFAULT_NEGATIVE = 'blur, watermark, bad anatomy, ugly, low quality, deformed, extra limbs, disfigured, text, logo, cropped';
+
+/**
+ * Strips markdown code fences (```json ... ```) from LLM output.
+ * @param raw - Raw LLM response that may be wrapped in markdown.
+ * @returns Clean string ready for JSON.parse.
+ */
+function stripMarkdownFences(raw: string): string {
+    return raw
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim();
 }
 
 /**
- * Generates a structured, production-ready prompt based on user settings.
+ * Safely parses the LLM's JSON response into a GenerationResult.
+ * Falls back to a single-variant duplicate if parsing fails.
  *
- * Takes into account `style`, `mood`, `aspectRatio`, `complexity`, and
- * `targetModel` to produce tailored prompts for image / video / text generation.
+ * @param raw - Raw string from the LLM.
+ * @returns Validated GenerationResult with all 3 variants.
+ */
+function parseVariationsJSON(raw: string): GenerationResult {
+    const cleaned = stripMarkdownFences(raw);
+
+    try {
+        const parsed = JSON.parse(cleaned);
+
+        /** Validate and extract a single variant with fallback */
+        const extractVariant = (key: string): PromptVariant => {
+            const v = parsed[key];
+            if (v && typeof v.positive === 'string' && typeof v.negative === 'string') {
+                return { positive: v.positive.trim(), negative: v.negative.trim() };
+            }
+            return { positive: '', negative: DEFAULT_NEGATIVE };
+        };
+
+        const result: GenerationResult = {
+            balanced: extractVariant('balanced'),
+            creative: extractVariant('creative'),
+            artistic: extractVariant('artistic'),
+        };
+
+        // If balanced is empty, something went wrong — throw to fallback
+        if (!result.balanced.positive) {
+            throw new Error('Empty balanced variant');
+        }
+
+        return result;
+    } catch (err) {
+        console.warn('[ai.service] JSON parse failed, using fallback:', err);
+
+        // Fallback: treat entire response as a single prompt
+        const fallbackPositive = cleaned.replace(/[{}"]/g, '').trim() || 'Generation failed — please try again.';
+        const fallback: PromptVariant = { positive: fallbackPositive, negative: DEFAULT_NEGATIVE };
+        return { balanced: fallback, creative: fallback, artistic: fallback };
+    }
+}
+
+/**
+ * Generates 3 distinct prompt variations (balanced, creative, artistic)
+ * based on the user's settings.
  *
  * @param options - Full set of user-selected generation parameters.
- * @returns A structured `EnhancedResult` with title, prompt, explanation, and tags.
- * @throws {Error} If the API call fails or the response cannot be parsed as JSON.
+ * @returns A `GenerationResult` with 3 named prompt variants.
+ * @throws {Error} If the Groq API call fails entirely.
  */
-export async function generateEnhancedPrompt(options: PromptOptions): Promise<EnhancedResult> {
+export async function generateEnhancedPrompt(options: PromptOptions): Promise<GenerationResult> {
     const targetLabels: Record<string, string> = {
         [TargetModelType.IMAGE]: 'a high-fidelity AI-generated image',
         [TargetModelType.VIDEO]: 'an AI-generated video',
@@ -290,28 +357,16 @@ export async function generateEnhancedPrompt(options: PromptOptions): Promise<En
     };
     const targetLabel = targetLabels[options.targetModel] ?? 'AI-generated content';
 
-    const userPrompt = `Create a professional prompt for ${targetLabel}.
+    const userPrompt = `Create 3 professional prompt variations for ${targetLabel}.
 
 User's idea: "${options.baseIdea}"
 
-Output ONLY: [Positive Prompt] ||| [Negative Prompt]`;
+Output ONLY valid JSON with keys: balanced, creative, artistic. Each with positive and negative strings. No markdown.`;
 
     const systemPrompt = buildStructuredSystem(options);
-    const content = await callGroq(systemPrompt, userPrompt, 0.7, 1024);
+    const content = await callGroq(systemPrompt, userPrompt, 0.7, 2048);
 
-    // Parse the ||| separator
-    const DEFAULT_NEGATIVE = 'blur, watermark, bad anatomy, ugly, low quality, deformed, extra limbs, disfigured, text, logo, cropped';
-    const parts = content.split('|||');
-    const positive = parts[0].trim();
-    const negative = parts[1] ? parts[1].trim() : DEFAULT_NEGATIVE;
-
-    return {
-        title: '',
-        optimizedPrompt: positive,
-        negativePrompt: negative || DEFAULT_NEGATIVE,
-        explanation: '',
-        suggestedTags: [],
-    };
+    return parseVariationsJSON(content);
 }
 
 // ═════════════════════════════════════════════════════════

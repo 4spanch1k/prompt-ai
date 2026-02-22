@@ -10,7 +10,7 @@
     gap: var(--space-md);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 640px) {
     .grid {
         grid-template-columns: 1fr 1fr;
         gap: var(--space-lg);
@@ -58,6 +58,43 @@
     background-color: rgba(139, 92, 246, 0.15);
     color: var(--violet);
     border-color: var(--violet);
+}
+
+/* ── Variation Tabs ── */
+
+.variationTabs {
+    display: flex;
+    gap: var(--space-xs);
+    padding: 3px;
+    background: var(--bg-element);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.variationTab {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.variationTab:hover {
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.variationTabActive {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--violet);
+    border-color: var(--violet);
+    box-shadow: 0 1px 4px rgba(139, 92, 246, 0.15);
 }
 
 /* ── Image Upload ── */

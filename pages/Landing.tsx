@@ -15,7 +15,7 @@ export const Landing: React.FC = () => {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <div className={styles.logo}>
-            <span className={`${styles.logoText} text-gradient-animate`}>PromptCraft AI</span>
+            <span className={styles.logoText}>PromptCraft</span>
           </div>
           <div className={styles.headerActions}>
             <Link to="/login" className={styles.loginLink}>
@@ -53,34 +53,6 @@ export const Landing: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className={styles.socialSection}
-          >
-            <p className={styles.socialLabel}>Connect with me</p>
-            <div className={styles.socialLinks}>
-              <a
-                href="https://instagram.com/aaspandiyar"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.instagramLink}
-              >
-                <Icons.Instagram className={styles.socialIcon} />
-                @aaspandiyar
-              </a>
-              <a
-                href="https://tiktok.com/@.4span"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.tiktokLink}
-              >
-                <Icons.TikTok className={styles.socialIcon} />
-                @.4span
-              </a>
-            </div>
-          </motion.div>
         </div>
       </main>
     </div>

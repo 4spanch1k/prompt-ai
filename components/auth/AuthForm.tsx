@@ -97,8 +97,8 @@ export const AuthForm: React.FC = () => {
             {/* Logo */}
             <div className={styles.logoWrap}>
                 <Link to="/" className={styles.logoLink}>
-                    <Icons.Magic className={styles.logoIcon} />
-                    <span className="text-gradient-animate" style={{ fontWeight: 600 }}>PromptCraft AI</span>
+                    <Icons.Logo className={styles.logoIcon} />
+                    <span style={{ fontWeight: 600 }}>PromptCraft</span>
                 </Link>
             </div>
 

@@ -10,33 +10,17 @@
     position: fixed;
     inset: 0 0 0 auto;
     z-index: 50;
-    width: 20rem;
+    width: 22rem;
+    max-width: 90vw;
     background-color: var(--bg-page);
     border-left: 1px solid var(--border);
     box-shadow: var(--shadow-xl);
     transform: translateX(100%);
-    transition: transform var(--transition-slow) ease-in-out;
+    transition: transform 0.3s ease-in-out;
 }
 
 .sidebarOpen {
     transform: translateX(0);
-}
-
-@media (min-width: 1024px) {
-    .overlay {
-        display: none;
-    }
-
-    .sidebar {
-        position: static;
-        transform: none;
-        height: auto;
-        width: 20rem;
-        flex-shrink: 0;
-        border-left: 1px solid var(--border);
-        background-color: rgba(9, 9, 11, 0.5);
-        box-shadow: none;
-    }
 }
 
 .inner {
@@ -60,6 +44,34 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.closeBtn {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-dim);
+    background: none;
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: var(--font-main);
+    line-height: 1;
+}
+
+.closeBtn:hover {
+    color: var(--text-secondary);
+    background: var(--bg-element);
 }
 
 .titleIcon {

@@ -79,20 +79,24 @@ export const AppPage: React.FC = () => {
         <div className={styles.headerInner}>
           <Link to="/" className={styles.logoLink}>
             <div className={styles.logoBox}>
-              <Icons.Magic className={styles.logoBoxIcon} />
+              <Icons.Logo className={styles.logoBoxIcon} />
             </div>
-            <span className={`${styles.logoText} text-gradient-animate`}>PromptCraft AI</span>
+            <span className={styles.logoText}>PromptCraft</span>
           </Link>
           <nav className={styles.headerNav}>
             <Link to="/dashboard" className={styles.dashboardLink}>
               Dashboard
             </Link>
+            {/* Burger menu button — always visible */}
             <button
               type="button"
               onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-              className={styles.historyBtn}
+              className={styles.burgerBtn}
+              aria-label="Open history"
             >
-              <Icons.History className={styles.historyBtnIcon} />
+              <span className={styles.burgerLine} />
+              <span className={styles.burgerLine} />
+              <span className={styles.burgerLine} />
             </button>
           </nav>
         </div>

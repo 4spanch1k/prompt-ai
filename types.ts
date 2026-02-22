@@ -34,13 +34,34 @@ export interface PromptOptions {
   camera?: string;
 }
 
-/** Structured result returned by the AI service */
+/** Structured result returned by the AI service (legacy single-variant) */
 export interface EnhancedResult {
   title: string;
   optimizedPrompt: string;
   negativePrompt?: string;
   explanation: string;
   suggestedTags: string[];
+}
+
+/** A single prompt variant with positive and negative parts */
+export interface PromptVariant {
+  /** The main generative prompt */
+  positive: string;
+  /** Elements to exclude from generation */
+  negative: string;
+}
+
+/** Available variation styles */
+export type VariationKey = 'balanced' | 'creative' | 'artistic';
+
+/** Result containing 3 distinct prompt variations */
+export interface GenerationResult {
+  /** Follows instructions precisely */
+  balanced: PromptVariant;
+  /** Adds unique details, lighting, and unexpected angles */
+  creative: PromptVariant;
+  /** Focuses on style, mood, and aesthetics (cinematic/painting) */
+  artistic: PromptVariant;
 }
 
 /** Supabase-backed history item (extends EnhancedResult) */

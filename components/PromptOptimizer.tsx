@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { generateEnhancedPrompt, describeImage } from '@/services/ai.service';
-import { TargetModelType, ImageAIModel, VideoAIModel } from '@/types';
+import { TargetModelType, ImageAIModel, VideoAIModel, GenerationResult, VariationKey } from '@/types';
 import {
     saveEnhancedPrompt,
     fetchRecentPrompts,
@@ -41,8 +41,8 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     restoredNegative,
 }) => {
     const [input, setInput] = useState('');
-    const [output, setOutput] = useState('');
-    const [negativePrompt, setNegativePrompt] = useState('');
+    const [variations, setVariations] = useState<GenerationResult | null>(null);
+    const [activeTab, setActiveTab] = useState<VariationKey>('balanced');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [copiedNeg, setCopiedNeg] = useState(false);
@@ -125,10 +125,20 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
     // Restore prompts from history selection
     useEffect(() => {
         if (restoredPositive) {
-            setOutput(restoredPositive);
-            setNegativePrompt(restoredNegative || '');
+            const restored: GenerationResult = {
+                balanced: { positive: restoredPositive, negative: restoredNegative || '' },
+                creative: { positive: restoredPositive, negative: restoredNegative || '' },
+                artistic: { positive: restoredPositive, negative: restoredNegative || '' },
+            };
+            setVariations(restored);
+            setActiveTab('balanced');
         }
     }, [restoredPositive, restoredNegative]);
+
+    /** Derived values from current active tab */
+    const activeVariant = variations?.[activeTab] ?? null;
+    const output = activeVariant?.positive ?? '';
+    const negativePrompt = activeVariant?.negative ?? '';
 
     const handleEnhance = async () => {
         if (!input.trim() && !imageBase64) {
@@ -136,18 +146,18 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
             return;
         }
         setLoading(true);
-        setOutput('');
-        setNegativePrompt('');
+        setVariations(null);
         try {
-            let enhancedPrompt: string;
-            let negative = '';
+            let result: GenerationResult;
 
             if (imageBase64) {
-                // Image-to-Prompt mode
-                enhancedPrompt = await describeImage(imageBase64, input.trim() || undefined);
+                // Image-to-Prompt mode — wrap single result into all 3 variants
+                const described = await describeImage(imageBase64, input.trim() || undefined);
+                const single = { positive: described, negative: '' };
+                result = { balanced: single, creative: single, artistic: single };
             } else {
-                // Text-to-Prompt mode
-                const result = await generateEnhancedPrompt({
+                // Text-to-Prompt mode — returns 3 variants
+                result = await generateEnhancedPrompt({
                     baseIdea: input.trim(),
                     targetModel: generationMode === 'video' ? TargetModelType.VIDEO : TargetModelType.IMAGE,
                     style,
@@ -158,22 +168,22 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
                     mode: generationMode,
                     camera: generationMode === 'video' ? camera : undefined,
                 });
-                enhancedPrompt = result.optimizedPrompt;
-                negative = result.negativePrompt ?? '';
-                console.log('[PromptOptimizer] positive:', enhancedPrompt);
-                console.log('[PromptOptimizer] negative:', negative);
             }
 
-            setOutput(enhancedPrompt);
-            setNegativePrompt(negative);
+            setVariations(result);
+            setActiveTab('balanced');
 
-            // Notify parent (AppPage) for localStorage history
-            onGenerateSuccess?.(input.trim() || '[Image Upload]', enhancedPrompt, negative);
+            // Notify parent (AppPage) for localStorage history — use balanced variant
+            onGenerateSuccess?.(
+                input.trim() || '[Image Upload]',
+                result.balanced.positive,
+                result.balanced.negative
+            );
 
             if (user) {
                 try {
                     const label = imageBase64 ? '[Image Upload]' : input.trim();
-                    await saveEnhancedPrompt(user.id, label, enhancedPrompt);
+                    await saveEnhancedPrompt(user.id, label, result.balanced.positive);
                 } catch {
                     // Save failed silently
                 }
@@ -441,6 +451,24 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
                             )}
                         </div>
 
+                        {/* Variation Tabs */}
+                        {variations && !loading && (
+                            <div className={styles.variationTabs}>
+                                {(['balanced', 'creative', 'artistic'] as VariationKey[]).map((key) => (
+                                    <button
+                                        key={key}
+                                        className={`${styles.variationTab} ${activeTab === key ? styles.variationTabActive : ''}`}
+                                        onClick={() => { setActiveTab(key); setCopied(false); setCopiedNeg(false); }}
+                                    >
+                                        {key === 'balanced' && '✨ '}
+                                        {key === 'creative' && '🎨 '}
+                                        {key === 'artistic' && '🎭 '}
+                                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         <div className={styles.outputBox}>
                             <AnimatePresence mode="wait">
                                 {loading ? (
@@ -529,71 +557,73 @@ export const PromptOptimizer: React.FC<PromptOptimizerProps> = ({
             </div>
 
             {/* Prompt History */}
-            {user && (
-                <Card>
-                    <CardContent>
-                        <div className={styles.historyHeader}>
-                            <div className={styles.historyTitle}>
-                                <Icons.History className={styles.historyIcon} />
-                                <span className={styles.historyLabel}>Recent prompts</span>
-                                <span className={styles.liveIndicator}>
-                                    <span className={styles.livePing} />
-                                    <span className={styles.liveDot} />
-                                </span>
-                                <span className={styles.liveText}>Live</span>
-                            </div>
+            {
+                user && (
+                    <Card>
+                        <CardContent>
+                            <div className={styles.historyHeader}>
+                                <div className={styles.historyTitle}>
+                                    <Icons.History className={styles.historyIcon} />
+                                    <span className={styles.historyLabel}>Recent prompts</span>
+                                    <span className={styles.liveIndicator}>
+                                        <span className={styles.livePing} />
+                                        <span className={styles.liveDot} />
+                                    </span>
+                                    <span className={styles.liveText}>Live</span>
+                                </div>
 
-                            {history.length > 0 && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleClearHistory}
-                                    className={styles.clearBtn}
-                                >
-                                    <Icons.Delete className={styles.clearBtnIcon} />
-                                    Clear History
-                                </Button>
-                            )}
-                        </div>
-
-                        {historyLoading ? (
-                            <div className={styles.historyLoading}>
-                                <Icons.Loading style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
-                                Loading...
-                            </div>
-                        ) : history.length === 0 ? (
-                            <p className={styles.historyEmpty}>
-                                No prompts yet. Enhanced prompts will appear here.
-                            </p>
-                        ) : (
-                            <div className={styles.historyList}>
-                                {history.map((item, idx) => (
-                                    <motion.button
-                                        key={item.id}
-                                        initial={{ opacity: 0, y: 4 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        type="button"
-                                        onClick={() => handleCopy(item.enhanced_prompt)}
-                                        className={styles.historyItem}
+                                {history.length > 0 && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleClearHistory}
+                                        className={styles.clearBtn}
                                     >
-                                        <p className={styles.historyItemOriginal}>
-                                            {item.original_prompt}
-                                        </p>
-                                        <p className={styles.historyItemEnhanced}>
-                                            {item.enhanced_prompt}
-                                        </p>
-                                        <span className={styles.historyItemHint}>
-                                            <Icons.Copy className={styles.historyItemHintIcon} />
-                                            Click to copy
-                                        </span>
-                                    </motion.button>
-                                ))}
+                                        <Icons.Delete className={styles.clearBtnIcon} />
+                                        Clear History
+                                    </Button>
+                                )}
                             </div>
-                        )}
-                    </CardContent>
-                </Card>
-            )}
-        </div>
+
+                            {historyLoading ? (
+                                <div className={styles.historyLoading}>
+                                    <Icons.Loading style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
+                                    Loading...
+                                </div>
+                            ) : history.length === 0 ? (
+                                <p className={styles.historyEmpty}>
+                                    No prompts yet. Enhanced prompts will appear here.
+                                </p>
+                            ) : (
+                                <div className={styles.historyList}>
+                                    {history.map((item, idx) => (
+                                        <motion.button
+                                            key={item.id}
+                                            initial={{ opacity: 0, y: 4 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            type="button"
+                                            onClick={() => handleCopy(item.enhanced_prompt)}
+                                            className={styles.historyItem}
+                                        >
+                                            <p className={styles.historyItemOriginal}>
+                                                {item.original_prompt}
+                                            </p>
+                                            <p className={styles.historyItemEnhanced}>
+                                                {item.enhanced_prompt}
+                                            </p>
+                                            <span className={styles.historyItemHint}>
+                                                <Icons.Copy className={styles.historyItemHintIcon} />
+                                                Click to copy
+                                            </span>
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )
+            }
+        </div >
     );
 };

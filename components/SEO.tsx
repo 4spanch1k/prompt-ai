@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SITE_NAME = 'PromptCraft AI';
+const SITE_NAME = 'PromptCraft';
 const DEFAULT_DESCRIPTION =
     'Create professional-grade AI prompts for Midjourney, ChatGPT, Runway, Stable Diffusion, and more. Transform your ideas into optimized prompts instantly.';
 const DEFAULT_IMAGE = '/og-image.png';

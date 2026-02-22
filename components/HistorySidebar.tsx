@@ -33,17 +33,27 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
           <div className={styles.header}>
             <h3 className={styles.title}>
               <Icons.History className={styles.titleIcon} />
-              History
+              Recent Prompts
             </h3>
-            {history.length > 0 && (
+            <div className={styles.headerActions}>
+              {history.length > 0 && (
+                <button
+                  type="button"
+                  onClick={onClear}
+                  className={styles.clearBtn}
+                >
+                  <Icons.Delete className={styles.clearIcon} /> Clear
+                </button>
+              )}
               <button
                 type="button"
-                onClick={onClear}
-                className={styles.clearBtn}
+                onClick={onToggle}
+                className={styles.closeBtn}
+                aria-label="Close history"
               >
-                <Icons.Delete className={styles.clearIcon} /> Clear
+                ✕
               </button>
-            )}
+            </div>
           </div>
 
           <div className={styles.list}>
